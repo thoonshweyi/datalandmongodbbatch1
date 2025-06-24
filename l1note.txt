@@ -1,0 +1,214 @@
+=> SQL Database (Structured Query Language Database)?
+structure format
+	tables (columns, rows)
+	SELECT, INSERT, UPDATE, DELETE
+	for = Bank System, ERP, CRM
+	
+	SQL Database
+		Mysql
+		PostgreSQL
+		Microsoft SQL Server
+		Oracle Database
+=>NoSQL Database? 
+	unstructured
+	key-value, document, graph ... format
+	Real-time apps, Streaming apps
+
+	NoSQL Database
+		MongoDb
+		Redis
+		Noe4j
+---------------------------------------------------------------
+=>MongoDB is NoSQL Database
+
+official webste
+https://www.mongodb.com/
+
+=>Download App
+	=>Windows
+		Method 1
+		Resources > Server Documentation > Introduction > Get Started > (rightpannel and scroll dow) 
+		MongoDB Installation Tutorials > Windows > Install MongoDB Community Edition > MongoDB Download Center
+		Version: 8.0.10 (current) 7 June 2025
+		Platform: Windows x64
+		Package: msi
+		click "Download"
+
+		Method 2
+		Product menu > Try Community Edition > Download
+		Version: 8.0.10 (current) 7 June 2025
+		Platform: Windows x64
+		Package: msi
+		click "Download"
+
+		=>Download MongoDB Shell
+			Product menu > Try Community Edition > Tool > MongoDB Shell > Download
+			Version: 2.5.2 (current) 7 June 2025
+			Platform: Windows x64 (10+)
+			Package: zip
+			click "Download"
+	=>Linux (Ubuntu)
+		Product menu > Try Community Edition > Download
+		Version: 8.0.10 (current) 7 June 2025
+		Platform: Ubuntu 24.04 x64
+		Package: server
+		click "Download"
+
+		Ubuntu 24.04 x64 Ubuntu for x64(Intel/AM 64-bit CPUs)
+		Ubuntu 24.04 ARM x64 Ubuntu for arm 64-bit (Raspberry PI, Apple M1/M2)
+	
+		=ARM
+		Advance RISC (Reduct Instuction Set Computer) Machine
+		=Benefits
+		Energy-efficient
+		Lower head output
+		Good performance per watt
+
+		=>Download MongoDB Shell
+			Product menu > Try Community Edition > Tool > MongoDB Shell > Download
+			Version: 2.5.2 (current) 7 June 2025
+			Platform: Debian(10+) Ubuntu (18.04+)x64
+			Package: deb
+			click "Download"
+
+		=>Download MongoDB Compacc
+			Product menu > Try Community Edition > Tool > MongoDB Compass (GUI) > Download
+			Version: 1.43.1 7 June 2025
+			Platform: Ubuntu 64-bit (16.04)
+			Package: deb
+			click "Download"
+
+	=>MacOS
+		Product menu > Try Community Edition > Download
+		Version: 8.0.10 (current) 7 June 2025
+		Platform: masOS x64
+		Package: tgz
+		click "Download"
+
+		macOS x64 Ubuntu for x64(Intel/AM 64-bit CPUs)
+		macOS ARM x64 Ubuntu for arm 64-bit (Raspberry PI, Apple M1/M2)
+	
+---------------------------------------------------------------
+
+=>Install App
+	=>Windows
+		=>Install Mongo DB
+
+		=>Path Mongo DB Shell
+			unzip
+			move "Download" folder to "C" > Program File > MongoDB
+			open unziped folder > bin
+			right click and go properties on mongosh.exe and copy Location:address
+
+			go to windows search "environment" and click "Edit the system environment variables"
+			"System Properties" > "Advanced" > "Environment Variables" > under "System variables" title > click "New"
+
+			Variable name: mongosh
+			Variable value: past location > click 'ok'
+
+			to open "Shell" go to "C > Program File > MongoDB  > unzipped folder > bin > double click "mongish.exe" "
+	=>Linux (Ubuntu) (driver)
+		=>Install MongoDB
+
+			ctl+alt+t
+			sudo apt update
+			sudo apt upgrade -y
+
+			cd ~/Downloads
+			sudo dpkg -i mongodb-org-server_8.0.10_amd64.deb
+			sudo apt -f install (Fix Missing Dependencies (optional))
+	
+		=check status
+			sudo systemctl status mongod
+			sudo systemctl restart mongod
+
+		=>If server is not working (optional)
+			=>Create Log and Data folders
+				sudo mkdir -p /var/log/mongodb
+				sudo mkdir -p /var/lib/mongodb 
+			=>Set Correct Ownership (drwxr-xr-x to)
+				sudo chown -R mongodb:mongodb /var/log/mongodb
+				sudo chown -R mongodb:mongodb /var/log/mongodb
+
+			=>Ensure your config file points to these paths
+				sudo nano /etc/mongod.config
+
+				storage:
+					dbPath: /var/lib/mongodb
+					
+					storage:
+						dbPath: /var/lib/mongodb
+
+					systemLog:
+						destination: file
+						logAppend: true
+						path: /var/log/mongodb/mongod.log
+
+					net:
+						port: 27017
+						bindIp: 127.0.0.1
+
+					processManagement:
+						timeZoneInfo: /usr/share/zoneinfo
+										
+		=check status
+			sudo systemctl status mongod
+			sudo systemctl restart mongod
+
+			sudo systemctl stop mongod
+			sudo systemctl start mongod
+
+		=>Install MongoDB Shell 
+			ctl+alt+t
+
+			cd ~/Downloads
+			sudo dpkg -i mongodb-mongosh_2.5.2_amd64.deb
+			sudo apt -f install (Fix Missing Dependencies (optional))
+
+		=>Install MongoDB Compass (GUI)
+			ctl+alt+t
+
+			cd ~/Downloads
+			sudo dpkg -i mongodb-compass_1.46.3_amd64.deb
+			sudo apt -f install (Fix Missing Dependencies (optional))
+
+	=>MacOS
+
+---------------------------------------------------------------
+
+
+=> Install extension on VScode
+	File menu > Preferences > Extensions
+	search as mongodb > "MongoDB for VS Code" Install
+	Advanced Connection Setting > "Open form" > Save & Connect
+
+	=>Open shell in vscode terminal
+	right click on "localhost:27017" > Launch MongoDB Shell
+	show dbs;
+
+
+
+
+
+🔧 A software component that allows the operating system or an app to communicate with hardware.
+✅ In detail:
+A driver (or device driver) is not part of the app itself, but may be required for the app to work properly, especially when:
+
+The app depends on specific hardware (e.g. printer, scanner, graphics card, sound card).
+
+The hardware needs instructions to function with the operating system (Windows, Linux, etc.).
+
+💡 Example:
+If you install a photo editing app that uses GPU acceleration, it may require a graphics driver.
+
+If you're installing a printer management app, it may ask you to install a printer driver.
+
+In mobile phones, apps like camera enhancers may depend on camera drivers that come with the phone’s firmware.
+
+🧠 Think of it like this:
+A driver is like a translator between the hardware and the software (including apps). Without it, they can’t understand each other.
+
+📝 In Summary:
+Term	Meaning in App Installation
+Driver	Software that lets the app or OS talk to hardware correctly.
+Needed when?	The app uses hardware like printer, scanner, GPU, etc.
