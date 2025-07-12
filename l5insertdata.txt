@@ -1,0 +1,74 @@
+=>Insert Data
+
+use lessonone
+db.createCollection("users")
+show dbs
+show collections
+
+##### Create ####
+=> Create Document (single)
+    db.users.insertOne({name:"su su",age:20,hasnrc:false})
+
+=> Create Document (multi)
+    db.users.insertMany([{name:"tun tun",age:19,hasnrc:false},{name:"zaw zaw",age:20,hasnrc:true},{name:"kyaw kyaw",age:21,hasnrc:true}])
+
+
+=>List Document
+    db.users.find()
+
+    db.users.insertOne({_id:"USR1001",name:"amy",age:23,hasnrc:true});
+    db.users.insertOne({_id:"USR1002",name:"army",age:20,hasnrc:false});
+    db.users.insertOne({_id:"USR1001",name:"aye mi",age:19,hasnrc:true}); // MongoServerError: E11000 duplicate key error collection: lessonone.users index: _id_ dup key: { _id: "USR1001" }
+
+---------------------------------------------------------------------------------------------------------------------
+=> Compass (how to add data)
+    click "Add Data" > "INsert document" > delete all lines
+
+    {
+        name: "win win",
+        age: 24,
+        hasnrc: true
+    }
+
+    // click "Format"
+    // Note: if you use js object styled! > do not forget to  click "format" btn - it only accept json format
+
+    {
+        "name": "zin zin",
+        "age": 30,
+        "hasnrc": true
+    }
+
+    click "Insert"
+
+
+
+    [
+        {name:"ni ni",age:23,hasnrc:true},
+        {name:"lin lin",age:21,hasnrc:true},
+        {name:"zaw zaw",age:20,hasnrc:true},
+        {name:"yamin",age:19,hasnrc:true},
+        {name:"aye aye",age:21,hasnrc:true},
+        {name:"hnin hnin",age:25,hasnrc:true},
+        {name:"win win",age:23,hasnrc:true},
+        {name:"yu yu",age:19,hasnrc:true},
+        {name:"su su",age:20,hasnrc:true}
+    ]
+
+
+    use lessonone
+    db.users.insertOne({
+        name: "thura",
+        age: 22,
+        hasnrc: true,
+        religion: null,
+        hobbies: ["sport","reading"],
+        dob: new Date("2003-01-01"),
+        contact: {
+            no: "62 st",
+            city: "mandalay",
+            country: "myanmar"
+        }
+    })
+
+-------------------------------------------------------------------------------------------------

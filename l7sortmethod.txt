@@ -1,0 +1,17 @@
+=> sort() method 
+syntax 
+db.collection.find(query).sort({field1:order,field2:order})
+
+Note: 1 for ascending order 
+        -1 for decending order
+
+mongosh
+use lessonone 
+
+db.users.find().sort({name:1})
+db.users.find().sort({age:1})
+db.users.find().sort({age:-1})
+
+=Sort by multiple fields
+db.users.find().sort({name:-1,age:1})
+----------------------------------------------------------------------------

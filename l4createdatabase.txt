@@ -1,0 +1,59 @@
+go to Terminal, CMD
+mongosh 
+
+=> Show Databases
+show dbs
+cls
+exit
+
+=> 
+
+
+Mysql 
+db -> table -> row -> col
+
+MongoDB 
+db > collection > document > key:value
+
+=>Choose Database or Switch Database
+use <database_name>
+
+eg: use admin
+    use config 
+    use local 
+    cls
+
+    *Terminal result
+    test> use admin
+    switched to db admin
+    admin>
+
+=>Create Database
+    use <database_name>
+
+    eg. use lessonone
+        show dbs (but, you may not seen lessonone on dbs, because there is no collection yet)
+
+=>Create collection 
+    db.createCollection("users")
+    show dbs;
+
+
+    use lessontwo
+    db.createCollection("users")
+
+    use lessonthree
+    db.createCollection("users")
+
+    use lessonfour
+    db.createCollection("users")
+
+    use lessonfive
+    db.createCollection("users")
+
+=> Show Collections
+    show collections
+
+=>Drop Database 
+    db.dropDatabase()
+    show dbs

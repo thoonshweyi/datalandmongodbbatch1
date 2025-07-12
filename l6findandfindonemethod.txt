@@ -1,0 +1,71 @@
+##### Read #####
+
+=> find() and findOne() Methods
+
+db.collection.find(query)
+db.collection.find(query,projection)
+
+db.collection.findOne(query)
+db.collection.findOne(query,projection)
+
+ctl+alt+t
+mongosh
+use lessonone
+show collections
+db.users.find()
+
+
+==== QUERY ====
+db.users.find({name:"zin zin"})
+
+db.users.find({name:"Zin Zin"}) // this will not work
+db.users.find({name:"ZIN ZIN"}) // this will not work
+
+db.users.find({name:"win win"})
+db.users.find({age:23})
+
+db.users.findOne({age:23})
+
+db.users.find({age:19})
+db.users.find({age:19,hasnrc:false})
+db.users.find({age:19,hasnrc:false,name:"yamin"})
+
+
+db.users.find({_id:"68694645bbe32af540e5787e"}) // this will not work
+db.users.findOne({_id:ObjectId('68694645bbe32af540e5787e')})
+
+
+==== QUERY, PROJECTION ====
+true = 1
+false = 0 
+*for projection
+
+
+db.users.find({},{name:true})
+db.users.find({},{_id:false,name:true})
+db.users.find({},{name:true,age:true})
+db.users.find({},{_id:false,age:true,name:true})
+
+
+db.users.find({},{name:1})
+db.users.find({},{_id:0,name:1})
+db.users.find({},{name:1,age:1})
+db.users.find({},{_id:0,age:1,name:1})
+
+db.users.find({hasnrc:false})
+db.users.find({hasnrc:0}) // this will not work
+db.users.find({hasnrc:false},{_id:0,hasnrc:1,name:1})
+db.users.find({hasnrc:false},{_id:0,hasnrc:true,name:true})
+
+
+db.user.find({hasnrc:false},{_id:false,hasnrc:true,name:false}) // MongoServerError[Location31254]: Cannot do exclusion on field name in inclusion projection
+db.user.find({hasnrc:false},{_id:false,hasnrc:true,name:0}) // MongoServerError[Location31254]: Cannot do exclusion on field name in inclusion projection
+db.user.find({hasnrc:false},{_id:false,hasnrc:false,name:true}) // MongoServerError[Location31254]: Cannot do exclusion on field name in inclusion projection
+
+db.users.find({hasnrc:false},{_id:false,hasnrc:true}) 
+db.users.find({hasnrc:false},{_id:false,name:true}) 
+
+db.users.findOne({age:23},{_id:0,name:1})
+db.users.findOne({age:23},{_id:0,name:1,hasnrc:1})
+---------------------------------------------------
+5FN
