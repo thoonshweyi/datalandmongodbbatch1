@@ -1,0 +1,495 @@
+Q where class A
+
+    aggregate[
+        where class A
+    ]
+
+    aggregate[
+        {match: {class, A}}
+    ]
+
+Q: select name,age,_id
+    aggregate[
+        select name,age,_id
+    ]
+
+    aggregate[
+        {project {name,age,_id}}
+    ]
+
+    aggregate[
+        {project {
+            name 1,
+            age 1,
+            _id 1
+        }}
+    ]
+
+Q: select name,age,_id,isAdult age > 18
+
+    aggregate[
+       select name,age,_id,isAdult age > 18 
+    ]
+
+    aggregate[
+       {project {name,age,_id,isAdult age > 18} }
+    ]
+
+    aggregate[
+       {project {
+        name,
+        age,
+        _id,
+        isAdult age > 18
+        }}
+    ]
+
+    aggregate[
+       {project {
+        name,
+        age,
+        _id,
+        isAdult {> [age, 18]}
+        }}
+    ]
+
+Q: group by 
+    What is GROUP BY?
+        GROUP BY is used in SQL to arrange rows into groups based on the values in one or more columns.
+        Once grouped, you can apply aggregate functions (like COUNT(), SUM(), AVG(), MAX(), MIN()) to each group.
+
+        Think of it like sorting your receipts into piles — one pile per store — and then counting or summing up the prices in each pile.
+
+        SELECT class, COUNT(*) AS total_students
+        FROM students
+        GROUP BY class;
+        Steps SQL does:
+
+        Find distinct values in the class column → (A, B).
+
+        Create a group of rows for each class.
+
+        Apply aggregate function (COUNT(*)) to each group.
+
+
+
+        SELECT class, COUNT(*) AS total
+        FROM students
+        GROUP BY class;
+
+
+        aggregate[
+            SELECT class, COUNT(*) AS total
+            FROM students
+            GROUP BY class;
+        ]
+
+        aggregate[
+            {group{
+                SELECT class, COUNT(*) AS total
+            FROM students
+            BY class}}
+        ]
+
+        aggregate[
+            {group{
+                SELECT class as id, COUNT(*) AS total
+                FROM students
+                BY class}}
+        ]
+
+        aggregate[
+            {
+                group{
+                    _id: class,
+                    total: {sum 1}
+                }
+            }
+        ]
+
+    1. What $sum does
+        $sum is an aggregation operator in MongoDB.
+
+        It adds up values across documents in a group.
+
+        When you use $sum: 1, you’re basically saying:
+        “Add 1 for each document in this group” → which gives you a count.
+            
+
+Q: order by age asc
+    aggregate[
+       { order by age asc}
+    ]
+
+    aggregate[
+       {sort {age, 1}}
+    ]
+
+Q: order by age asc, limit 3
+    aggregate[
+        order by age asc, limit 3
+    ]
+
+    aggregate[
+        order by age asc, 
+        limit 3
+    ]
+
+    aggregate[
+        {sort {age, 1}}
+        {limit 3}
+    ]
+
+
+Q: 
+
+    1. What $skip does
+        It ignores the first N documents in the result.
+        It keeps all documents after that.
+
+    Common Uses
+        Pagination (together with $limit).
+
+        Skipping records you already processed.
+
+        Ignoring the first few results for sampling or offset purposes.
+
+    5. SQL Equivalent
+
+        SELECT *
+        FROM students
+        ORDER BY age ASC
+        OFFSET 2;
+
+
+    aggregate[
+        SELECT *
+        FROM students
+        ORDER BY age ASC
+        OFFSET 2;
+    ]
+
+
+    aggregate[
+       {
+        ORDER BY age ASC
+        OFFSET 2;
+        }
+    ]
+
+
+    aggregate[
+       {
+            {ORDER BY age ASC}
+            {OFFSET 2}
+        }
+    ]
+
+    aggregate[
+       {
+            {sort{ age:1}}
+            {skip: 2}
+        }
+    ]
+
+Q: SELECT COUNT(*) AS totalstudents
+    FROM students;
+
+    aggregate{
+        SELECT COUNT(*) AS totalstudents
+        FROM students;
+    }
+
+    aggregate{
+        COUNT(*) AS totalstudents
+    }
+
+    aggregate{
+       {count totalstudents}
+    }
+
+Q: SELECT o.*, c.*
+    FROM orders o
+    LEFT JOIN customers c
+    ON o.customerId = c.id;
+
+    aggregate[
+        SELECT o.*, c.*
+        FROM orders o
+        LEFT JOIN customers c
+        ON o.customerId = c.id;
+    ]
+
+
+    orders.aggregate[
+        SELECT o.*, c.*
+        LEFT JOIN customers c
+        ON o.customerId = c.id;
+    ]
+
+    orders.aggregate[
+        lookup{
+            SELECT o.*, c.*
+            customers c
+            ON o.customerId = c.id;
+        }
+    ]
+
+    orders.aggregate[
+        lookup{
+            SELECT o.*, c.*
+            customers c
+            ON o.customerId = c.id;
+        }
+    ]
+
+    orders.aggregate[
+        lookup{
+            from: customers
+            ON o.customerId = c.id;
+        }
+    ]
+
+     orders.aggregate[
+        lookup{
+            from: customers
+            localField: customerId
+            foreignField: _id
+            as: cus
+        }
+    ]
+
+*mongo result 
+[
+  {
+    _id: 1,
+    product: 'Laptop',
+    customerId: 1001,
+    qty: 1,
+    cus: [ { _id: 1001, name: 'Nan Nan', email: 'nannan@gmail.com' } ]
+  },
+]
+
+Q: (Join with array fields)
+SELECT p.*, c.*
+FROM pupils p
+LEFT JOIN pupil_courses pc
+    ON p.id = pc.pupil_id
+LEFT JOIN courses c
+    ON pc.course_id = c.id;
+
+
+aggregate[
+    {
+        lookup{
+            from: courses
+            localField: enrolledCourses
+            foreignField: id
+            as: enrolled
+        }
+    }
+]
+
+
+Q: 
+First, what $unwind does
+It takes an array field (like courses) and splits it into multiple documents, one document per array element.
+
+The rest of the fields are duplicated for each new document.
+
+If the array is empty or doesn’t exist, the default $unwind removes that document from the re
+
+
+Q: SELECT *, (price + tax) AS grandTotal
+FROM inventories;
+
+aggregate{
+    SELECT *, (price + tax) AS grandTotal
+    FROM inventories;
+
+}
+
+aggregate{
+    {
+        addFields {grandTotal (price + tax) AS }
+    }
+}
+
+aggregate{
+    {
+        addFields {
+            grandTotal (price + tax) AS 
+        }
+    }
+}
+
+aggregate{
+    {
+        addFields {
+            grandTotal (  {+ [price, tax]}) AS 
+        }
+    }
+}
+
+
+
+Q: SELECT *,
+       (price + tax) AS grandTotal,
+       CASE 
+           WHEN qty <= 30 THEN TRUE
+           ELSE FALSE
+       END AS almostOut
+FROM inventories;
+
+
+aggregate[
+   (price + tax) AS grandTotal
+   almostOut qty <= 30? true : false
+]
+
+
+aggregate[
+   addFields{grandTotal (price + tax)  }
+   addFields{almostOut qty <= 30? true : false}
+]
+
+aggregate[
+    addFields{
+        grandTotal {+ {[price  tax]}}  
+    }
+   addFields{
+    almostOut {<= [qty  30]}
+    }
+]
+
+aggregate[
+    addFields{
+        grandTotal {+ {[price  tax]}}  
+    }
+   addFields{
+    almostOut {<= [qty  30]}
+    }
+]
+
+
+Q: SELECT *,
+       CASE
+           WHEN qty >= 100 THEN 'A'
+           WHEN qty >= 50  THEN 'B'
+           WHEN qty >= 20  THEN 'C'
+           ELSE 'D'
+       END AS stock_level
+FROM inventories;
+
+
+aggregate[
+    CASE
+           WHEN qty >= 100 THEN 'A'
+           WHEN qty >= 50  THEN 'B'
+           WHEN qty >= 20  THEN 'C'
+           ELSE 'D'
+    END AS stock_level
+]
+
+
+aggregate[
+    {
+        addFields{
+             CASE
+                WHEN qty >= 100 THEN 'A'
+                WHEN qty >= 50  THEN 'B'
+                WHEN qty >= 20  THEN 'C'
+                ELSE 'D'
+            END
+        }
+    }
+   
+]
+
+
+aggregate[
+    {
+        addFields{
+            cond{
+                WHEN qty >= 100 THEN 'A'
+                WHEN qty >= 50  THEN 'B'
+                WHEN qty >= 20  THEN 'C'
+                ELSE 'D'
+            }
+        }
+    }
+   
+]
+
+aggregate[
+    {
+        addFields{
+            cond{
+                cond{
+                    if{qty >= 100 }
+                    then 'A'
+                    else
+                    {WHEN qty >= 50  THEN 'B'
+                    WHEN qty >= 20  THEN 'C'
+                    ELSE 'D'}
+                }
+            }
+        }
+    }
+   
+]
+
+aggregate[
+    {
+        addFields{
+            cond{
+                cond{if{qty >= 100 }
+                then 'A'
+                else
+                {
+                    cond{if{qty >= 50}
+                    then 'B'
+                    else{
+                        WHEN qty >= 20  THEN 'C'
+                        ELSE 'D'
+                    }}
+               
+                }}
+            }
+        }
+    }
+]
+
+aggregate[
+    {
+        addFields{
+            cond{
+                cond{if{qty >= 100 }
+                then 'A'
+                else
+                {
+                    cond{if{qty >= 50}
+                    then 'B'
+                    else{
+                        cond{if{ qty >= 20  }
+                        then 'C'
+                        else 'D'}
+                    }}
+                }}
+            }
+        }
+    }
+]
+
+*result (stock.level)
+[
+  {
+    _id: 1,
+    name: 'Laptop',
+    price: 600,
+    qty: 10,
+    tax: 60,
+    stock: { level: 'D' }
+  },
+  ....
+]

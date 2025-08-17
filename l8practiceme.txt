@@ -1,0 +1,150 @@
+ bouns > salary
+
+> [bouns,slary]
+---------------------------------------------------
+    =>Using Operators
+        =Q: city = yangon
+            {city = yangon}
+            {city { =  yangon}}
+
+        =Q: name zin zin or lwin lwin
+            {name zin zin, lwin lwin}
+            {name in [zin zin, lwin lwin]}
+            {name {in: [zin zin, lwin lwin]}}
+
+    =>Using expression
+        =Q: salary > bonus
+            expr{ salary > bonus }
+            expr{ > [salary, bonus] }
+
+        =Q: salary > 300000
+            expr{> [salary 30000]}
+        
+        =Q: salary > 300000 and bonus < 40000
+            A: (salary > 300000 ) and (bonus < 40000)
+                and [(salary > 300000 ), (bonus < 40000)]
+                and [ > [salary  300000], < [bonus < 40000]]
+                {and [ {> [salary  300000]}, {< [bonus < 40000]}]}
+                {
+                    and [ 
+                        {> [salary  300000]}, 
+                        {< [bonus < 40000]}
+                    ]
+                }
+
+    =>Comginingn Operator
+    Q: age > 20 && age < 40
+        {
+            age {>20, <40}
+        }
+
+        {
+            age {
+                {> 20}, 
+                {< 40}
+            }
+        }
+
+    Q: name = "hnin hnin" && (age > 20 && age < 40)
+
+        {
+            name = "hnin hnin",
+            age > 20 && age < 40
+        }
+
+        {
+            name{= "hnin hnin"},
+            age{> 20,< 40}
+        }
+
+    =>Using Mathematic Operator
+        Q: (salary + bonus) > 400000
+            expr{
+                >  [(salary + bonus), 400000]
+            }
+
+            expr{
+                >  [{+ [salary, bonus]}, 400000]
+            }
+
+        Q: salary < (bonus * 2)
+            expr{
+                < [salary, (bonus * 2)]
+            }
+
+            expr{
+                < [salary, {* [bonus, 2]}]
+            }
+
+        Q: (salary / 2) < 200000
+            expr {
+                < [(salary / 2), 200000]
+            }
+
+            expr {
+                < [{/ [salary, 2]}, 200000]
+            }
+
+    =>Using Condition
+        Q: if: salary < bonus
+                true 
+            else 
+                false
+            
+            expr{
+                cond{
+                    if: salary < bonus
+                        true 
+                    else 
+                        false
+                }
+            }
+
+
+            expr{
+                cond{
+                    if: salary < bonus
+                        true 
+                    else 
+                        false
+                }
+            }
+
+            expr{
+                cond{
+                    if: {< [salary,bonus]},
+                    then:
+                        true, 
+                    else:
+                        false
+                }
+            }
+    
+        Q: if age <= 40
+                true
+            else false
+
+
+            expr{
+                cond{
+                    if age <= 40
+                        true
+                    else false
+                }
+            }
+
+            expr{
+                cond{
+                    if: age <= 40,
+                    then:true,
+                    else: false,
+                }
+            }
+
+            expr{
+                cond{
+                    if: {<= [age, 40]},
+                    then:true,
+                    else: false,
+                }
+            }

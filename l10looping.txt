@@ -1,0 +1,648 @@
+=> Looping
+
+db.createCollection("developers")
+db.developers.insertMany([
+    {_id:1,name:"Bo Bo",hobbies:["reading","swimming","travelling"],languages:["WDF","PHP","Laravel"]},
+    {_id:2,name:"Tun Tun",hobbies:["gaming","writing","travelling"],languages:["WDF","jQuery","Reactjs"]},
+    {_id:3,name:"Su Su",hobbies:["reading","swimming","cooking"],languages:["WDF","Python","Django"]},
+    {_id:4,name:"Ni Ni",hobbies:["reading","cooking","travelling"],languages:["WDF","PHP","Laravel"]},
+    {_id:5,name:"Hnin Hnin",hobbies:["reading","yoga","travelling"],languages:["WDF","PHP","Laravel"]}
+])
+
+
+=> $map
+syntax
+ {
+    $map:{
+        input: <array expression>,
+        as: <variable name>,
+        in: <expression to apply>
+    }
+ }
+
+exe 1
+db.developers.aggregate([
+    {
+        $project:{
+            name:1,
+            lowercaseLanguages: {
+                $map: {
+                    input:"$languages",
+                    as:"lang",
+                    in: {
+                        $toLower: "$$lang"
+                    }
+                }
+            }
+        }
+    }
+])
+
+exe 2
+db.developers.aggregate([
+    {
+        $addFields:{
+            upperHobies:{
+                $map:{
+                    input:"$hobbies",
+                    as:"hob",
+                    in:{$toUpper:"$$hob"}
+                }
+            }
+        }
+    }
+])
+
+*result 
+[
+  {
+    _id: 1,
+    name: 'Bo Bo',
+    lowercaseLanguages: [ 'wdf', 'php', 'laravel' ]
+  },
+  ....
+]
+
+
+
+
+
+[
+  {
+    _id: 1,
+    name: 'Bo Bo',
+    hobbies: [ 'reading', 'swimming', 'travelling' ],
+    languages: [ 'WDF', 'PHP', 'Laravel' ],
+    upperHobies: [ 'READING', 'SWIMMING', 'TRAVELLING' ]
+  },
+  ....
+]
+
+------------------------------------------------------------------
+==> $all Operator 
+synatx
+{
+    <field>:{
+        $all: [value1,value2,....]
+    }
+}
+
+db.developers.find()
+
+exe 1
+db.developers.find({
+    languages: {
+        $all:["WDF","Laravel"]
+    }
+})
+
+exe 2
+db.developers.find({
+    languages: {
+        $all:["Laravel","WDF"]
+    }
+})
+------------------------------------------------------------------
+
+=> $filter 
+
+syntax
+{
+    $filter:{
+        input: <array expression>
+        as: <variable name> // optional
+        cond: <boolean expression>
+    }
+}
+
+eg 1
+db.developers.find({
+    languages: {
+        $all:["WDF","Laravel"]
+    }
+})
+
+eg 1
+db.developers.aggregate([
+    {
+        $match:{
+            languages: {
+                $all:["WDF","Laravel"]
+            }   
+        }
+    }
+])
+
+exe 1
+
+db.developers.aggregate([
+    {
+        $addFields:{
+            phpDeveloper:{
+                $filter:{
+                    input: "$languages",
+                    as: "lang",
+                    cond: {
+                        $eq: ["$$lang","PHP"]
+                    }
+                }
+            }
+        }
+    }
+]) 
+
+
+exe 2
+
+db.developers.aggregate([
+    {
+        $addFields:{
+            phpDeveloper:{
+                $filter:{
+                    input: "$languages",
+                    as: "lang",
+                    cond: {
+                        $eq: ["$$lang","PHP"]
+                    }
+                }
+            }
+        }
+    },
+    {
+        $match: {
+            phpDeveloper: {
+                $ne: []
+            }
+        }
+    },
+    {
+        $limit:2
+    }
+]) 
+
+
+exe 3
+db.developers.aggregate([
+    {
+        $project:{
+            name: 1,
+            PythonDevp:{
+                $filter:{
+                    input: "$languages",
+                    as: "lang",
+                    cond: {
+                        $eq: ["$$lang","Python"]
+                    }
+                }
+            }
+        },
+    },
+    {
+        $match: {
+            PythonDevp: {
+                $ne: []
+            }
+        }
+    }
+]) 
+----------------------------------------------------------------------------
+=> $reduce
+
+syntax 
+{
+    $reduce:{
+        input: <array expression>,
+        initialValue: <expression> // starting value1
+        in: <expression to apply> // Reduction logic using $$value and $$this
+    }
+}
+
+db.purchases.insertMany([
+    {
+        orderId:1001,
+        items:[
+            {product:"Laptop",price:800,qty:1},
+            {product:"Mouse",price:20,qty:2},
+            {product:"Keyboard",price:50,qty:1},
+        ]
+    },
+    {
+        orderId:1001,
+        items:[
+            {product:"Monitor",price:300,qty:2},
+            {product:"Headphone",price:100,qty:2},
+        ]
+    },
+    {
+        orderId:1001,
+        items:[
+            {product:"Speaker",price:100,qty:4},
+            {product:"Webcam",price:50,qty:1},
+        ]
+    }
+])
+
+
+db.purchases.aggregate([
+    {
+        $project:{
+            _id:0,
+            orderId:1,
+            grandTotal: {
+                $reduce:{
+                    input: "$items",
+                    initialValue: 0,
+                    in:{
+                        $add: ["$$value",{
+                            $multiply: ["$$this.price","$$this.qty"]
+                        }]
+                    }
+                }
+            }
+        }
+    }
+])
+
+$$value → the current accumulated result (starts with initialValue).
+$$this → the current element of the array you’re looping through.
+
+exe 2
+db.purchases.aggregate([
+    {
+        $project: {
+            _id: 0,
+            orderId: 1,
+            totalQty: {
+                $reduce: {
+                    input: "$items",
+                    initialValue: 0,
+                    in: {
+                        $add: ["$$value","$$this.qty"]
+                    }
+                }
+            }
+        }
+    }
+])
+
+eg (map)
+db.purchases.aggregate([
+    {
+        $project: {
+            _id: 1,
+            orderId: 1,
+            itemTotals: {
+                $map: {
+                    input: "$items",
+                    as: "item",
+                    in: {
+                        $multiply: ["$$item.price","$$item.qty"]
+                    }
+                }
+            }
+        }
+    }
+])
+
+
+----------------------------------------------------------
+=> zip (combine arrays)
+
+syntax
+{
+    $zip: {
+        inputs:,
+        useLongestLength:<boolean> // Optional (default false)
+        defaults: [default1,default2,....]        // Optional
+    }
+}
+
+db.itaccessories.insertMany([
+    {
+        product: "Laptop",
+        prices: [1000,800,600],
+        quarters: ["Q1","Q2","Q3"]
+    },
+    {
+        product: "Phone",
+        prices: [700,500],
+        quarters: ["Q1","Q2"]
+    },
+    {
+        product: "Tablet",
+        prices: [400,300,200,100],
+        quarters: ["Q1","Q2","Q3"]
+    },
+    {
+        product: "Headphone",
+        prices: [500,400,300,200,100],
+        quarters: ["Q1","Q2","Q3"]
+    },
+])
+
+db.itaccessories.insertMany([
+    {
+        product: "CCTV",
+        prices: [500,400,300],
+        quarters: ["Q1","Q2","Q3","Q4"]
+    },
+])
+
+
+exe 1
+db.itaccessories.aggregate([
+    {
+        $project:{
+            product:1,
+            priceHistory:{
+                $zip:{
+                    inputs: ["$quarters","$prices"]
+                }
+            }
+        }
+    }
+])
+
+exe 2
+db.itaccessories.aggregate([
+    {
+        $project:{
+            product:1,
+            priceHistory:{
+                $zip:{
+                    inputs: ["$quarters","$prices"],
+                    useLongestLength: true
+                }
+            }
+        }
+    }
+])
+
+exe 4
+db.itaccessories.aggregate([
+    {
+        $project:{
+            product:1,
+            priceHistory:{
+                $zip:{
+                    inputs: ["$quarters","$prices"],
+                    useLongestLength: true,
+                    defaults: ["No Quarter",0]
+                }
+            }
+        }
+    }
+])
+
+*result()
+    [
+    {
+        _id: ObjectId('68a0a2ed5cb2d17ba1748a5f'),
+        product: 'Laptop',
+        priceHistory: [ [ 'Q1', 1000 ], [ 'Q2', 800 ], [ 'Q3', 600 ] ]
+    },
+    {
+        _id: ObjectId('68a0a2ed5cb2d17ba1748a60'),
+        product: 'Phone',
+        priceHistory: [ [ 'Q1', 700 ], [ 'Q2', 500 ] ]
+    },
+    {
+        _id: ObjectId('68a0a2ed5cb2d17ba1748a61'),
+        product: 'Tablet',
+        priceHistory: [
+        [ 'Q1', 400 ],
+        [ 'Q2', 300 ],
+        [ 'Q3', 200 ],
+        [ 'No Quarter', 100 ]
+        ]
+    },
+    {
+        _id: ObjectId('68a0a2ed5cb2d17ba1748a62'),
+        product: 'Headphone',
+        priceHistory: [
+        [ 'Q1', 500 ],
+        [ 'Q2', 400 ],
+        [ 'Q3', 300 ],
+        [ 'No Quarter', 200 ],
+        [ 'No Quarter', 100 ]
+        ]
+    },
+    {
+        _id: ObjectId('68a154fe80056791bc748a5f'),
+        product: 'CCTV',
+        priceHistory: [ [ 'Q1', 500 ], [ 'Q2', 400 ], [ 'Q3', 300 ], [ 'Q4', 0 ] ]
+    }
+    ]
+-----------------------------------------------------------------------
+=> $range
+ syntax 
+ {
+    $range: [<start>,<end>,<step ?>]
+ }
+
+db.inits.insertMany([
+    {_id:1,label:"A",start:0,end:5,step:1},
+    {_id:2,label:"B",start:3,end:15,step:3},
+    {_id:3,label:"C",start:10,end:10,step:1}, // start === end
+    {_id:4,label:"D",start:5,end:2,step:1}, // start > end
+])
+
+
+// exe 1
+db.inits.aggregate([
+    {
+        $project: {
+            label: 1,
+            numbers: {
+                $range: [0,5]
+            }
+        }
+    }
+])
+
+// exe 2
+db.inits.aggregate([
+    {
+        $project: {
+            label: 1,
+            numRange: {
+                $range: ["$start","$end"]
+            }
+        }
+    }
+])
+
+// exe 3
+db.inits.aggregate([
+    {
+        $project: {
+            label: 1,
+            numRange: {
+                $range: ["$start","$end","$step"]
+            }
+        }
+    }
+])
+*result 
+    [
+    { _id: 1, label: 'A', numRange: [ 0, 1, 2, 3, 4 ] },
+    { _id: 2, label: 'B', numRange: [ 3, 6, 9, 12 ] },
+    { _id: 3, label: 'C', numRange: [] },
+    { _id: 4, label: 'D', numRange: [] }
+    ]
+-------------------------------------------------------------------------
+=> $merge 
+syntax
+{
+    $merge:{
+        into: <target collection>,
+        on: <identifier field>, // optional
+        whenMatched: <action> //optional
+        whenNotMatched: <action> // optional
+    }
+}
+
+db.staffs.insertMany([
+    {_id:1,name:"Yu Yu",dep:"HR",salary:[4000,5000,6000]},
+    {_id:2,name:"Nu Nu",dep:"Account",salary:[3000,4000,5000]},
+    {_id:3,name:"Su Su",dep:"Warehouse",salary:[2000,3000,4000]},
+])
+
+//exe 1 (if the target collections doesn't exist ! $merge will create it)
+
+show collections
+
+db.staffs.aggregate([
+    {
+        $merge:{
+            into: "staffsummary" // new target collection
+        }
+    }
+])
+
+show collections
+db.staffsummary.find()
+// merging multiple time doesn't duplicate documents.
+
+db.staffsummary.drop()
+show collections
+
+// exe 2
+db.staffs.insertMany([
+    {_id:4,name:"Aung Aung",dep:"IT",salary:[6000,7000,8000]},
+    {_id:5,name:"Kyaw Kyaw",dep:"Warehouse",salary:[2000,3000,4000]},
+])
+
+
+db.staffinfos.insertMany([
+    {_id:1,name:"Yu Yu",dep:"HR",salary:[4000,5000,6000]},
+    {_id:2,name:"Nu Nu",dep:"Account",salary:[3000,4000,5000]},
+    {_id:3,name:"Su Su",dep:"Warehouse",salary:[2000,3000,4000]},
+])
+
+
+db.staffs.find()
+db.staffinfos.find()
+
+db.staffs.aggregate([
+    {
+        $merge: {
+            into: "staffinfos",
+            on: "_id",               // match by id
+            whenMatched: "merge",    // merge existing fields
+            whenNotMatched: "insert" // insert if not found
+        }
+    }
+])
+
+
+
+db.staffs.find()
+db.staffinfos.find()
+
+
+
+
+
+$map
+$filter
+$zip
+$range
+
+-----------------------------------------------------------------------------------------------------
+=>What $zip does
+
+    $zip is used to merge multiple arrays into a single array of pairs (or tuples).
+    Think of it like a zipper in real life: it joins the first item of array A with the first item of array B, the second with the second, and so on.
+    
+    inputs
+        Required.
+        List of arrays you want to merge.
+        Example: ["$quarters", "$prices"]
+        It will combine like:
+            ["Q1", 100]
+            ["Q2", 120]
+            ["Q3", 110]
+
+    useLongestLength
+        Optional (default: false).
+        If false → stops at the shortest array length.
+        If true → continues until the longest array length.
+        Example:
+
+        quarters: ["Q1", "Q2", "Q3"],
+        prices: [100]
+
+        If useLongestLength: false → [["Q1", 100]]
+        If useLongestLength: true → [["Q1", 100], ["Q2", 0], ["Q3", 0]]
+
+    defaults
+        Optional.
+
+        Default values when one array runs out of elements.
+
+        In your case: ["No Quarter", 0]
+
+        *Error 
+         defaults and inputs must have the same length
+
+
+What is $merge?
+
+    $merge is a write stage in the aggregation pipeline.
+
+    It takes the results of your aggregation and writes them into another collection (or the same collection).
+
+    Basically, it lets you upsert (update + insert) or replace data into a target collection.
+
+        1. into
+
+        Defines the target collection (where results will be written)
+        Example
+        into: "staffinfos"   // write into staffinfos collection
+        You can also specify another database:
+        into: { db: "HR", coll: "staffinfos" }
+
+        2. on
+            Defines the field(s) used to match documents between the source and target.
+            Works like a primary key for merging.
+            Example:
+            on: "_id"        // match documents by their _id field
+            on: ["name","dob"] // match using composite keys
+
+        3. whenMatched
+            Defines what to do if a match is found in the target collection.
+            Options:
+            "replace" → Replace the whole document with the pipeline result.
+            "merge" → Merge fields (update existing + keep old fields).
+            "keepExisting" → Do nothing (keep existing target doc).
+            "fail" → Stop and throw error.
+            [ pipeline stages ] → You can even run extra pipeline operations on the matched document.
+
+        4. whenNotMatched
+
+            Defines what to do if no match is found in the target.
+            Options:
+            "insert" → Insert the new document.
+            "discard" → Drop it (don’t insert).
+            "fail" → Throw error.

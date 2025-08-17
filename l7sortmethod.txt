@@ -15,3 +15,26 @@ db.users.find().sort({age:-1})
 =Sort by multiple fields
 db.users.find().sort({name:-1,age:1})
 ----------------------------------------------------------------------------
+
+=> limit (number)
+syntax 
+
+db.collection.find(query).limit(number)
+
+db.users.find()
+db.users.find().limit(5)
+db.users.find().sort({name:1}).limit(5)
+----------------------------------------------------------------------------
+=>skip() (for pagination)
+
+syntax 
+db.collection.find(query).skip(number).limit(number)
+
+db.users.find()
+db.users.find().limit(5)
+
+db.users.find().skip(1).limit(5)
+db.users.find().skip(2).limit(5)
+db.users.find().skip(5).limit(5)
+
+
