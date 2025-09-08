@@ -378,7 +378,7 @@ db.inventories.find()
 db.inventories.aggregate([
     {
         $addFields:{
-            grandTotal: {$add: ["$price","$tax"]}
+            grandTotal: {: ["$price","$tax"]}
         }
     }
 ])

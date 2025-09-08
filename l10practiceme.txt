@@ -1,0 +1,8 @@
+exe 1
+
+const lowercaseLanguages = dev.languages.map(lang => lang.toLowerCase());
+
+console.log({
+  name: dev.name,
+  lowercaseLanguages
+});

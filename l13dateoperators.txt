@@ -1,0 +1,190 @@
+=> Date Operators
+
+$hour
+$minute
+$second
+
+$year
+$month
+$dayOfMonth
+
+$dateToString           $dateToString{format:,date:,timezone:option}
+$dateFromString         $dateFromString{format:,dateString:,timezone:option}
+
+$dateAdd                $dateAdd:{startDate,unit:,  // minute, month, ...}
+$dateSubtract           $dateSubtract:{startDate,unit:,  // minute, month, ...}
+
+$dateDiff               $dateDiff:{startDate:,endDate:unit:}
+
+db.events.insertMany([
+    {
+        _id:ObjectId(),
+        name: "Morning Run",
+        start: ISODate("2025-09-06T06:30:00Z"),
+        end: ISODate("2025-09-06T07:30:00Z"),
+        createdAt: ISODate("2025-09-06T09:10:45Z")
+    },
+    {
+        _id:ObjectId(),
+        name: "Client Meeting",
+        start: ISODate("2025-09-06T09:30:00Z"),
+        tz: "Asia/Bangkok",
+        createdAt: ISODate("2025-09-06T10:10:00Z")
+    },
+    {
+        _id:ObjectId(),
+        name: "Conference Call",
+        start: ISODate("2025-09-07T06:30:00Z"),
+        end: ISODate("2025-09-07T07:30:00Z"),
+        createdAt: ISODate("2025-09-07T10:10:00Z")
+    },
+    {
+        _id:ObjectId(),
+        name: "Project Deadline",
+        dateString: "2025-09-08 23:59:59",
+        tz: "Asia/Yangon"
+    },
+    {
+        _id:ObjectId(),
+        name: "New Project Meeting",
+        start: ISODate("2025-09-10T09:00:00Z"),
+        end: ISODate("2025-09-10T09:00:00Z"),
+    },
+])
+
+exe 1
+
+db.events.aggregate([
+    {
+        $project:{
+            name:1,
+            year:{$year: "$start"},
+            month:{$month: "$start"},
+            day:{$dayOfMonth: "$start"},
+        }
+    }
+])
+
+exe2
+db.events.aggregate([
+    {
+        $project:{
+            name:1,
+            time:{
+                hour:{$hour: "$start"},
+                minute:{$minute: "$start"},
+                second:{$second: "$start"},
+            }
+        }
+    }
+])
+
+*result()
+[
+  {
+    _id: ObjectId('68bc54cc1b85d7dc1e748a64'),
+    name: 'Morning Run',
+    time: { hour: 6, minute: 30, second: 0 }
+  },
+]
+
+exe3
+db.events.aggregate([
+    {
+        $project:{
+            name:1,
+            startLocal:{
+                $dateToString:{
+                    format: "%Y-%m-%d %H:%M:%S",
+                    date:"$start",
+                    timezone: "Asia/Yangon" 
+                }
+            }
+        }
+    }
+])
+
+exe4
+db.events.aggregate([
+    {
+        $project:{
+            name:1,
+            datelineDate:{
+                $dateFromString:{
+                    format: "%Y-%m-%d %H:%M:%S",
+                    dateString:"$dateString",
+                    timezone: "$tz"
+                }
+            }
+        }
+    }
+])
+
+exe 5 (add 10 minute)
+db.events.aggregate([
+    {
+        $project:{
+            name:1,
+            start:1,
+            plus10min:{
+                $dateAdd: {
+                    startDate: "$start",
+                    unit:"minute",               // minute, month, ...
+                    amount:10
+                }
+            }
+        }
+    }
+])
+
+
+exe 6 (subbract 1 month)
+db.events.aggregate([
+    {
+        $project:{
+            name:1,
+            start:1,
+            plus10min:{
+                $dateSubtract: {
+                    startDate: "$end",
+                    unit:"month",               // minute, month, ...
+                    amount:1
+                }
+            }
+        }
+    }
+])
+
+
+exe 7
+db.events.aggregate([
+    {
+        $project:{
+            name:1,
+            minutesDiff:{
+                $dateDiff:{
+                    startDate: "$start",
+                    endDate: "$end",
+                    unit: "minute"
+                }
+            },
+            daysDiff:{
+                $dateDiff:{
+                    startDate: "$start",
+                    endDate: "$end",
+                    unit: "day"
+                }
+            }
+        }
+    }
+])
+
+*result
+[
+  {
+    _id: ObjectId('68bc54cc1b85d7dc1e748a64'),
+    name: 'Morning Run',
+    minutesDiff: Long('60'),
+    daysDiff: Long('0')
+  },
+]

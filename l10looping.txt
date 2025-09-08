@@ -559,11 +559,66 @@ db.staffs.aggregate([
 
 db.staffs.find()
 db.staffinfos.find()
+---------------------------------------------------------------------
+=> $function
+
+syntax{
+    $function:{
+        body:function(arg1,art2,....){
+            return result;
+        },
+        args:[<expression1>,<expression2>,....],    // input argument
+        lang:"js"                                   // always "js",
+    }
+}
 
 
+db.borrowers.insertMany([
+    {_id:1,name:"yi yi",age:21},
+    {_id:2,name:"nu nu",age:15},
+    {_id:3,name:"hla hla",age:29},
+    {_id:4,name:"aye aye",age:30},
+    {_id:5,name:"mi mi",age:25},
+])
+
+db.borrowers.aggregate([
+    {
+        $project:{
+            original:"$name",
+            capitalized: {
+                $function: {
+                    body:function(str){
+                        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+                    },
+                    args: ["$name"],
+                    lang: "js"
+                }
+            }
+        }
+    }
+])
 
 
+db.borrowers.aggregate([
+    {
+        $project:{
+            name: 1,
+            LoanVerify: {
+                $function: {
+                    body:function(age){
+                        if(age < 18) return "Loan not allow";
+                        else if (age < 30) return "Loan allowed";
+                        else return "Will Consider";
+                    },
+                    args: ["$age"],
+                    lang: "js"
+                }
+            }
+        }
+    }
+])
 
+---------------------------------------------------------------------
 $map
 $filter
 $zip
