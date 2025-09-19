@@ -1,0 +1,181 @@
+=> Array Operators
+
+$size
+$in                 $in: [value,field]
+
+$map
+$filter
+$reduct
+
+$arrayElemAt        
+$last
+$slice              $slice:[$field,start,end]
+$setUnion           $slice:[$field,value]
+
+$concatArrays
+-----------------------------------------------------------------------
+
+db.ladies.insertMany([
+    {_id:1,name:"Yu Yu",tags:["cooker","gamer"],scores:[50,60,70],purchases:[{item:"laptop",price:1200},{item:"mouse",price:30}],wishlist:["headset","keyboard"],friends:[2,3]},
+    {_id:2,name:"Nu Nu",tags:["photographer","gamer"],scores:[30,40,50],purchases:[{item:"keyboard",price:70},{item:"mouse",price:30}],wishlist:["laptop"],friends:[1]},
+    {_id:3,name:"Chaw Chaw",tags:["cooker","photographer","programmer"],scores:[90,60,80],purchases:[],wishlist:["camera","tripod"],friends:[1]},
+    {_id:4,name:"Moe Moe",tags:[],scores:[],purchases:[],wishlist:[],friends:[]},
+    {_id:5,name:"Thu Thu",tags:["gamer"],scores:[60,70],purchases:[{item:"controller",price:60}],wishlist:["controller","keyboard"],friends:[2,3]},
+    {_id:6,name:"Zin Zin",tags:["gamer","cooker","gamer"],scores:[50,100],purchases:[{item:"controller",price:60},{item:"laptop",price:1200},{item:"mouse",price:30},{item:"keyboard",price:40}],wishlist:["controller","mouse","cd"],friends:[2,3,1]}
+])
+
+=> $size
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            scoresCount:{
+                $size: "$scores"
+            }
+        }
+    }
+])
+
+=>in (boolean return)
+
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            hasValue:{
+                $in: ["cooker","$tags"]
+            }
+        }
+    }
+])
+
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            hasValue:{
+                $in: ["Cooker","$tags"]
+            }
+        }
+    }
+])
+
+
+
+$map
+
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            filterScores:{
+                $map:{
+                    input:"$scores",
+                    as:"score",
+                    in:{
+                        $multiply:["$$score",2]
+                    }
+                }
+            }
+        }
+    }
+])
+
+$filter
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            filterScores:{
+                $filter:{
+                    input:"$scores",
+                    as:"score",
+                    cond:{
+                        $gte:["$$score",60]
+                    }
+                }
+            }
+        }
+    }
+])
+
+$reduce
+
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            filterScores:{
+                $reduce:{
+                    input:"$scores",
+                    initialValue: 0,
+                    in:{
+                        $add:["$$value","$$this"]
+                    }
+                }
+            }
+        }
+    }
+])
+
+=> $arrayElemAt
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            firstPurchaseItem:{
+                $arrayElemAt:[
+                    {
+                        $map:{
+                        input: "$purchases",
+                        as: "purchase",
+                        in: "$$purchase.item"
+                        }
+                    }
+                ,0]
+            }            
+        }
+    }
+])
+
+=>$last
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            lastScore:{$last:"$scores"}
+        }
+    }
+])
+
+=> $slice
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            ltop2Purchase: {$slice: ["$purchases",0,2]}
+        }
+    }
+])
+
+
+=> $setUnion
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            tagUnion: {$setUnion: ["$tags",["Student"]]}
+        }
+    }
+])
+
+=>concatArrays
+db.ladies.aggregate([
+    {
+        $project:{
+            name:1,
+            allArr: {$concatArrays: ["$tags","$wishlist"]}
+        }
+    }
+])
+-----------------------------------------------------
