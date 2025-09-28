@@ -1,0 +1,60 @@
+=> Miscellaneous Operators
+
+db.peoples.insertMany([
+    {_id:1,name:"Mi Mi",dept:"HR",salary:[3000,3200,3500],phone:"0912345678",scores:[65,78,82],joined: new Date("2020-01-15")},
+    {_id:2,name:"Ni Ni",dept:"IT",salary:[5000,5200,5400],email:"nini@gmail.com",scores:[88,91],joined: new Date("2022-02-15")},
+    {_id:3,name:"Yi Yi",dept:"IT",salary:[4200],scores:[55,60],joined: new Date("2020-03-15")},
+    {_id:4,name:"Nu Nu",dept:"Sales",salary:[2500,2600],tags:['remote','part-time'],scores:[70],joined: new Date("2020-04-15")},
+    {_id:5,name:"Mu Mu",dept:"Sales",salary:[3000,3500],tags:['remote','part-time'],scores:[80],joined: new Date("2020-05-15")}
+]);
+
+=>$exists (true,false)
+
+    db.peoples.find({
+        phone:{$exists:false}
+    })
+
+=>$type
+
+    db.peoples.find({
+        salary:{$type:"array"}
+    })
+
+=> $regex
+
+    db.peoples.find({
+        name:{$regex:'^M'}
+    })
+
+    db.peoples.find({
+        name:{$regex:'^m'}
+    })
+
+    db.peoples.find({
+        name:{$regex:'^m',$options:"i"}
+    })
+
+=> $eleMatch
+    db.peoples.find({
+        scores:{
+            $elemMatch: {
+                $gte:80,$lte:90
+            }
+        }
+    })
+
+=> $literal (generate rando float)
+
+    db.peoples.aggregate([
+        {
+            $project:{
+                name:1,
+                department: "$dept",
+                randomScore:{
+                    $rand:{}
+                }
+            }
+        }
+    ])
+
+=> $rand

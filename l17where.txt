@@ -1,0 +1,99 @@
+=> $where
+
+syntax (function)
+    db.collection.find({
+        $where:function(){
+            return                          // this
+        }
+    })
+
+syntax (string)
+    db.collection.find($where:"this.age > 30 && this.active")
+
+
+
+db.workers.insertMany([
+    {_id:1,name:"Mi Mi",dept:"HR",salary:[3000,3200,3500],phone:"0912345678",scores:[65,78,82],joined: new Date("2020-01-15"),age:28},
+    {_id:2,name:"Ni Ni",dept:"IT",salary:[5000,5200,5400],phone:"0923456789",scores:[88,92,95],joined: new Date("2020-01-15"),age:28},
+    {_id:3,name:"Ag Ag",dept:"IT",salary:[4000,4200],phone:"0934567890",scores:[55,60],joined: new Date("2020-01-15"),age:28},
+    {_id:4,name:"Mg Mg",dept:"Sales",salary:[2500,2700,2900],phone:"0145678901",scores:[72,70,68],joined: new Date("2020-01-15"),age:28},
+    {_id:5,name:"Ko Ko",dept:"IT",salary:[7000],phone:"0956789012",scores:[100,99,98],joined: new Date("2020-01-15"),age:28},
+    {_id:6,name:"Yi Yi",dept:"HR",salary:[3100,3300],phone:"067890123",scores:[80,85],joined: new Date("2020-01-15"),age:28},
+]);
+
+exe 1 // start with 09
+
+    db.workers.find({phone:{$regex:'^09'}})
+    db.workers.find({phone:{$regex:'^01'}})
+
+    // function
+    db.workers.find({
+        $where:function(){
+            return this.phone && this.phone.indexOf('09') === 0
+        }
+    })
+
+    // string
+    db.workers.find({$where:"this.phone && this.phone.indexOf('09') === 0"
+    })
+
+    exe 2 // find people older than 30
+    db.workers.find($where"this.age > 30")
+
+    exe3 // find people older than 30
+    db.workers.find({$where: "this.salary && this.salary.length >= 3"})
+
+    exe 4 // find people whose salary > 10000
+    db.workers.find(
+        {$where : function(){
+            if(!this.salary) return false;
+            let s = 0;
+            for(let x =0; x<this.salary.length; x++){
+                s += this.salary[x]
+            }
+
+            return s > 10000;
+        }
+    })
+
+
+    db.workers.find(
+        {$where : function(){
+            if(!this.salary) return false;
+            let s = 0;
+            for(let x =0; x<this.salary.length; x++) s += this.salary[x];
+
+            return s > 10000;
+        }
+    })
+
+     db.workers.find(
+        {$where : function(){
+            if(!this.salary) return false;
+            let s = this.salary.reduce((prev,next)=>prev+next,0)
+
+            return s > 10000;
+        }
+    })
+
+
+    exe 5 // find where first score > last score
+
+    db.workers.find(
+        {
+            $where: function(){
+                let last = this.scores.length - 1
+                return this.scores[0] > this.scores[last]
+            }
+        }
+    )
+
+
+    db.workers.find(
+        {
+            $where: "this.scores && this.scores[0] > this.scores[this.scores.length -1]"
+        }
+    )
+
+
+    27WH
