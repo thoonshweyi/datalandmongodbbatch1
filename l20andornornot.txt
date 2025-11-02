@@ -1,0 +1,157 @@
+=> $and, $or, $nor, $not
+
+use lessonone
+show collections
+db.getCollectionInfos()
+
+
+db.consumers.insertMany([
+    {
+        name: "Aung Aung",
+        age: 28,
+        department: "Engineering",
+        salary: 750000,
+        position: "Senior Developer",
+        isAction: true,
+        skills: ["JavaScript","Node.js","MongoDB"],
+        experience:5,
+        location:"Yangon"
+    },
+    {
+        name: "Tun Tun",
+        age: 32,
+        department: "Marketing",
+        salary: 650000,
+        position: "Marketing Manager",
+        isAction: true,
+        skills: ["SEO","Content Writing","Analytics"],
+        experience:8,
+        location:"Bago"
+    },
+    {
+        name: "Zaw Zaw",
+        age: 45,
+        department: "Engineering",
+        salary: 950000,
+        position: "Tech Lead",
+        isAction: false,
+        skills: ["Java","Spring","AWS"],
+        experience:5,
+        location:"Yangon"
+    },
+    {
+        name: "Ni Ni",
+        age: 26,
+        department: "Sales",
+        salary: 550000,
+        position: "Sales Representative",
+        isAction: true,
+        skills: ["Negotiation","CRM","Communication"],
+        experience:3,
+        location:"Yangon"
+    },
+    {
+        name: "Su Su",
+        age: 35,
+        department: "Engineering",
+        salary: 850000,
+        position: "DevOps Engineer",
+        isAction: true,
+        skills: ["Docker","AWS","DigitalOcean"],
+        experience:10,
+        location:"Bago"
+    },
+    {
+        name: "Yu Yu",
+        age: 29,
+        department: "HR",
+        salary: 600000,
+        position: "HR",
+        isAction: false,
+        skills: ["Recruitment","Employee Relations"],
+        experience:6,
+        location:"Mandalay"
+    }
+])
+
+=> $and
+    Implicit $and
+
+    db.consumers.find({
+        department:"Engineering",
+        isAction:true
+    })
+
+    = Explcit $and
+    db.consumers.find({
+        $and:[
+            {department:"Engineering"},
+            {isAction:true}
+        ]
+    })
+
+    db.consumers.find({
+        $and:[
+            {department:"Engineering"},
+            {salary:{$gte:700000}},
+            {salary:{$lte:900000}},
+        ]
+    })
+
+     db.consumers.find({
+        $and:[
+            {department:"Engineering"},
+            {isAction:true},
+            {location:"Yangon"},
+            {experience:{$gte:5}}
+        ]
+    })
+
+---------------------------------------------------------------------------------
+=> $or
+
+    db.consumers.find({
+        $or:[
+            {department:"Engineering"},
+            {department:"Marketing"},
+        ]
+    })
+
+    db.consumers.find({
+        $or:[
+            {location:"Yangon"},
+            {location:"Mandalay"},
+            {salary:{$gt:750000}}
+        ]
+    })
+
+------------------------------------------------------------
+=> $nor
+    db.consumers.find({
+        $nor:[
+            {department:"Engineering"},
+            {department:"Marketing"},
+        ]
+    })
+
+
+    db.consumers.find({
+        $nor:[
+            {isAction:false},
+            {location:"Bago"},
+            {salary:{$lte:550000}}
+        ]
+    })
+------------------------------------------------------------
+=> $not {$not: {condition1}}
+
+    db.consumers.find({
+       department: {$ne:"Engineering"}
+    })
+
+
+    db.consumers.find({
+        department: {
+            $not: {$eq:"Engineering"}
+        }
+    })

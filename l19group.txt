@@ -1,0 +1,34 @@
+=>$group with $first
+
+db.sales.insertMany([
+    {_id:1,product:"A",amount:10},
+    {_id:2,product:"A",amount:20},
+    {_id:3,product:"B",amount:100},
+    {_id:4,product:"B",amount:200},
+    {_id:5,product:"B",amount:300},
+])
+
+
+=> exe1
+
+db.sales.aggregate([
+    {
+        $group:{
+            _id:"$product",
+            grandamount: {
+                $first:"$amount"
+            }
+        }
+    }
+])
+
+=> exe 2
+db.sales.aggregate([
+    {
+        $group:{
+            _id:"$product",
+            firstSale: {$first:"$amount"},
+            lastSale: {$last:"$amount"}
+        }
+    }
+])

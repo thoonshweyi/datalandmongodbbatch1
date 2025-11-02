@@ -1,0 +1,104 @@
+=> Index
+
+db.articles.insertMany([
+    {_id:1,title:"MongoDB Text Search Basics","content":"Lorem Ipsum is simply dummy text of the printing and typesetting industry. MongoDB","tags":["mongodb","search"]},
+    {_id:2,title:"Advanced Indexing","content":" Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, ","tags":["index"]},
+    {_id:3,title:"Node.js and MongoDB","content":"when an unknown printer took a galley of type and scrambled it to make","tags":["node","mongodb"]},
+    {_id:4,title:"Python pymongo Guide","content":"a type specimen book. It has survived not only five centuries, but also","tags":["python","mongodb"]},
+    {_id:5,title:"Javascript and mongodb Guide","content":"the leap MongoDB into electronic typesetting, remaining essentially unchanged","tags":["mongodb","javascript"]},
+])
+
+db.articles.getIndexes() // [ { v: 2, key: { _id: 1 }, name: '_id_' } ]
+
+=> Create a text index (single field)
+
+db.articles.createIndex({content:"text"}) #     name: 'content_text',
+
+# db.articles.createIndex({title:"text"}) # Error MongoServerError[IndexOptionsConflict]: An equivalent index already exists with a different name and options.
+
+=> List index
+db.articles.getIndexes()
+*result
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  {
+    v: 2,
+    key: { _fts: 'text', _ftsx: 1 },
+    name: 'content_text',
+    weights: { content: 1 },
+    default_language: 'english',
+    language_override: 'language',
+    textIndexVersion: 3
+  }
+]
+
+=>Search using text index
+db.articles.find({$text:{$search:"MongoDB"}})
+db.articles.find({$text:{$search:"mongodb"}})
+db.articles.find({$text:{$search:"MongoDB Ipsum"}})
+db.articles.find({$text:{$search:"mongoDB ipsum"}})
+
+-------------------------------------------------------------------------
+
+db.posts.insertMany([
+    {_id:1,title:"MongoDB Text Search Basics","content":"Lorem Ipsum is simply dummy text of the printing and typesetting industry. MongoDB","tags":["mongodb","search"]},
+    {_id:2,title:"Advanced Indexing","content":" Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, ","tags":["index"]},
+    {_id:3,title:"Node.js and MongoDB","content":"when an unknown printer took a galley of type and scrambled it to make","tags":["node","mongodb"]},
+    {_id:4,title:"Python pymongo Guide","content":"a type specimen book. It has survived not only five centuries, but also","tags":["python","mongodb"]},
+    {_id:5,title:"Javascript and mongodb Guide","content":"the leap MongoDB into electronic typesetting, remaining essentially unchanged","tags":["mongodb","javascript"]},
+])
+
+db.posts.getIndexes()
+
+
+=> Create a text index (multi field)
+
+    db.posts.createIndex({title:"text",content:"text"}) 
+    
+    db.posts.getIndexes()                               #    name: 'title_text_content_text',
+
+    db.posts.find({$text:{$search:"MongoDB"}})
+    db.posts.find({$text:{$search:"mongodb"}})
+    db.posts.find({$text:{$search:"MongoDB Ipsum"}})
+    db.posts.find({$text:{$search:"mongoDB ipsum"}})
+
+-------------------------------------------------------------------------
+
+=> Delete / Drop text index
+    db.articles.getIndexes()
+
+    db.articles.dropIndex("content_text")
+
+    db.articles.getIndexes()
+
+=> Drop all text indexes
+
+    db.posts.getIndexes()
+
+    db.posts.dropIndexes()
+
+    db.posts.getIndexes()
+--------------------------------------------------------------------------------
+
+
+🧠 What is a text index in MongoDB?
+
+A text index is a special type of index that allows full-text search on string content in MongoDB collections.
+It lets you search words and phrases inside text fields (like title, description, content, etc.) efficiently.
+
+db.articles.createIndex({ content: "text" })
+“Create a text index on the content field of the articles collection.
+db.articles.find({ $text: { $search: "javascript tutorial" } })
+MongoDB will now search inside the content field for documents containing the words “javascript” or “tutorial”.
+
+🧠 What is a Multiple Field Text Index?
+
+A multiple field text index allows you to perform text searches on more than one field in a document.
+MongoDB combines the contents of those fields into a single text index.
+
+⚠️ Important Notes
+Rule	Explanation
+🧱 Only one text index	Each collection can have only one text index (but it can include multiple fields).
+🔤 Only string fields	Works only on text/string data.
+🕵️‍♂️ Case-insensitive	Searches ignore letter case.
+🧹 Stop words ignored	Common words (“and”, “the”, “is”, etc.) are ignored.

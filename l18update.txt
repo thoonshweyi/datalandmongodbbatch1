@@ -1,0 +1,262 @@
+=> Update
+
+db.labors.insertMany([
+    {_id:1,name:"Aung Aung",dept:"IT",salary:400000,city:"Yangon"},
+    {_id:2,name:"Su Su",dept:"HR",salary:350000,city:"Mandalay"},
+    {_id:3,name:"Ko Ko",dept:"IT",salary:700000,city:"Yangon"},
+])
+
+db.labors.find()
+
+=>exe 1 updateOne()
+
+db.labors.updateOne(
+    {name:"Aung Aung"}, // filter
+    {$set: {salary:500000}} // update operation
+)
+db.labors.find()
+
+
+=>exe 2 updateMany()
+
+db.labors.updateMany(
+    {dept:"IT"},
+    {$set: {bonus:5000}}
+)
+db.labors.find()
+
+
+=>exe 3 replaceOne()
+
+db.labors.replaceOne(
+    {name:"Su Su"},
+    {name:"Su Su",dept:"HR",salary:400000,city:"Mandalay",married:true},
+)
+db.labors.find()
+
+=>exe 4 $inc Increment
+
+db.labors.updateMany(
+    {dept:"IT"},
+    {$inc: {salary:50000}},
+)
+db.labors.find()
+
+
+=>exe 5 $mul Multiply
+
+db.labors.updateOne(
+    {name:"Su Su"},
+    {$mul: {salary:2}},
+)
+db.labors.find()
+-----------------------------------------------------------------------------
+=>Add a field if it doesn't exist
+=>exe 1
+
+db.labors.updateOne(
+    {name:"Aye Aye"},
+    {
+        $set: {dept:"Finance",salary:200000,joined:new Date()}
+    },
+    {upsert:true} // insert new document if not found
+)
+db.labors.find()
+
+
+=>exe 2
+
+db.labors.updateOne(
+    {name:"Mi Mi"},
+    {
+        $set: {dept:"Finance",salary:100000},
+        $setOnInsert: {joined:new Date()}
+    },
+    {upsert:true} // insert new document if not found
+)
+db.labors.find()
+
+=> exe 3 (i)
+db.labors.updateOne(
+    {name:"Zin Zin"},
+    {
+        $set: {dept:"Finance",salary:50000,joined:new Date()},
+        $setOnInsert: {city: "Mawlamyine"}, // not allowed
+        $setOnInsert: {nation: "Burma"},
+    },
+    {upsert:true} // insert new document if not found
+)
+db.labors.find()
+
+=> exe 3 (ii)
+
+db.labors.updateOne(
+    {name:"Yu Yu"},
+    {
+        $set: {dept:"Finance",salary:50000,joined:new Date()},
+        $setOnInsert: {city: "Mawlamyine",country: "BMyanmarurma"}, // not allowed
+        $setOnInsert: {nation: "Burma"},
+    },
+    {upsert:true} // insert new document if not found
+)
+db.labors.find()
+
+
+=> exe 3 (iii)
+
+db.labors.updateOne(
+    {name:"Ni Lar"},
+    {
+        $set: {dept:"Finance",salary:30000,joined:new Date()},
+        $setOnInsert: {city: "Yangon",country: "Myanmar"}, // not allowed
+    },
+    {upsert:true} // insert new document if not found
+)
+db.labors.find()
+
+-----------------------------------------------------------------------------
+=>Rename a field
+
+
+db.labors.updateMany(
+    {},
+    {$rename:{"city":"location"}}
+)
+db.labors.find()
+
+-----------------------------------------------------------------------------
+=>Update array field
+    $push
+    $addToSet
+    $pull
+    $pop
+
+=> exe 1 (i) $push
+db.labors.updateOne(
+    {name:"Aung Aung"},
+    {$set:{skills:["HTML","CSS"]}}
+)
+db.labors.find()
+
+=> exe 1 (ii)
+db.labors.updateOne(
+    {name:"Aung Aung"},
+    {$push:{skills: "Javascript"}}
+)
+db.labors.find()
+
+=> exe 1 (iii)
+db.labors.updateOne(
+    {name:"Aung Aung"},
+    {$push:{skills:["PHP","Laravel"]}}
+)
+db.labors.find()
+
+db.labors.updateOne(
+    {name:"Ko Ko"},
+    {$push:{skills:"jQuery"}}
+)
+db.labors.find()
+------------------------------
+=> exe 1 (i) $addToSet
+db.labors.updateOne(
+    {name:"Ko Ko"},
+    {$addToSet:{skills: "Nodejs"}}
+)
+db.labors.find()
+
+=> exe 1 (ii)
+db.labors.updateOne(
+    {name:"Ko Ko"},
+    {$addToSet:{skills: "Javascript"}}
+)
+db.labors.find()
+
+------------------------------
+=> exe 1 (i) $pull
+db.labors.updateOne(
+    {name:"Aung Aung"},
+    {$pull:{skills: "CSS"}}
+)
+db.labors.find()
+------------------------------
+=> exe 1 (i) $pop (1 back)
+db.labors.updateOne(
+    {name:"Ko Ko"},
+    {$pop:{skills: 1}}
+)
+db.labors.find()
+
+=> exe 1 (i) $pop
+db.labors.updateOne(
+    {name:"Ko Ko"},
+    {$pop:{skills: -1}}
+)
+db.labors.find()
+------------------------------------------------------
+=>updateMany()
+
+
+db.labors.updateMany(
+    {dept:"Finance",salary:{$lt:60000}},
+    {$mul: {salary:2}}
+)
+db.labors.find()
+
+------------------------------------------------------
+=> Remove field
+
+db.labors.updateMany(
+    {},
+    {$unset:{bonus:""}}
+)
+db.labors.find()
+------------------------------------------------------
+=> Delete Document
+
+db.labors.deleteOne({name: "Ko Ko"})
+db.labors.deleteMany({dept: "Finance"})
+
+db.labors.find()
+
+
+------------------------------------------------------
+
+Create a Collection
+
+db.createCollection('teachers')
+db.teachers.find()
+
+db.helpers.insertOne({name:"Ni Ni",age:25,city:"Yangon"})
+db.helpers.find();
+
+show collections
+
+=> Delete a collection 
+db.teachers.drop()
+db.helpers.drop()
+
+------------------------------------------------------
+=>Create a Database
+show dbs
+
+use company
+
+db.employees.insertMany([
+    {name:"Ni Ni",age:25,citiy:"Yangon"},
+    {name:"Ko Ko",age:30,citiy:"Bago"},
+])
+
+show dbs
+
+db.dropDatabase()
+
+use lessonone
+
+show dbs
+---------------------------------------------------------------------------------------------------------------
+Behavior	                                Explanation
+replaceOne() removes all fields except _id	✅ True
+_id removed if not included in replacement	❌ No, MongoDB preserves it automatically
+_id can be changed	                        ❌ No, immutable
+To replace while keeping _id	            Just omit _id — MongoDB keeps
