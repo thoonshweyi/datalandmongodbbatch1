@@ -1,0 +1,179 @@
+
+mongosh
+use lessonone
+show collections
+db.getCollectionInfos()
+
+db.officestaffs.insertMany([
+    {_id:1,name:"Aung Aung", dept:"IT",salary:400000,city:"Yangon"},
+    {_id:2,name:"Su Su", dept:"HR",salary:350000,city:"Yangon"},
+    {_id:3,name:"Zaw Zaw", dept:"IT",salary:700000,city:"Yangon"},
+    {_id:4,name:"Ni Ni", dept:"Finance",salary:250000,city:"Yangon"},
+    {_id:5,name:"Kyaw Kyaw", dept:"IT",salary:550000,city:"Yangon"},
+])
+
+=> System Variables
+db.officestaffs.find()
+
+= $$ROOT (return the entire document)
+
+db.officestaffs.aggregate([
+    {
+        $project:{
+            name:1,
+            fullDocument: "$$ROOT"
+        }
+    }
+])
+
+
+= $$CURRENT (same as $salary in the simple case)
+
+db.officestaffs.aggregate([
+    {
+        $project:{
+            salaryDouble:{
+                $multiply: ["$$CURRENT.salary",2]
+            }
+        }
+    }
+])
+
+= $$REMOVE ()
+
+db.officestaffs.aggregate([
+    {
+        $project:{
+            name:1,
+            city: {
+                $cond:{
+                    if:{
+                        $eq:["$city","Yangon"]
+                    },
+                    then: "$city",
+                    else: "$$REMOVE"
+                }
+            }
+        }
+    }
+])
+
+db.officestaffs.aggregate([
+    {
+        $project:{
+            name:1,
+            city: {
+                $cond:{
+                    if:{
+                        $ne:["$city","Yangon"]
+                    },
+                    then: "$city",
+                    else: "$$REMOVE"
+                }
+            }
+        }
+    }
+])
+
+= $$NOW (timestamp)
+
+db.officestaffs.aggregate([
+    {
+        $addFields:{
+            createdAt:"$$NOW"
+        }
+    }
+])
+---------------------------------------------------------
+=> User-defined Variables
+
+    $let (in expressions)
+    let ($lookup,$filter,$map,etc....)
+
+
+=$let
+{
+    $let{
+        vars:,
+        in:
+    }
+}
+
+db.officestaffs.aggregate([
+    {
+        $project:{
+           name:1,
+           doubleSalary:{
+                $let:{
+                    vars: {original:"$salary"},
+                    in: {
+                        $multiply: ["$$original",2]
+                    }
+                }
+           }
+        }
+    }
+])
+
+= let
+db.onlinestudents.insertMany([
+    {_id:1,name:"Aung Kyaw",scores:[50,80,90]},
+    {_id:2,name:"Su Myat",scores:[40,80,100]},
+    {_id:3,name:"Zaw Zaw",scores:[60,70,80]},
+])
+
+db.onlinestudents.insertMany([
+    {_id:4,name:"NiNi",scores:[70,80,90]},
+    {_id:5,name:"Yu Yu",scores:[50,60,70]},
+])
+
+db.enrollments.insertMany([
+    {studentId:1,course:"MongoDB"},
+    {studentId:2,course:"Nodejs"},
+    {studentId:3,course:"Python"},
+])
+db.enrollments.insertMany([
+    {studentId:1,course:"Python"},
+])
+
+
+db.onlinestudents.aggregate({
+    $project:{
+        name:1,
+        adjustScores:{
+            $map:{
+                input:"$scores",
+                as: "score",
+                in: {
+                    $add:["$$score",10]
+                }
+            }
+        }
+    }
+})
+
+db.onlinestudents.aggregate({
+    $project:{
+        name:1,
+        adjustScores:{
+            $map:{
+                input:"$scores",
+                as: "score",
+                in: {
+                    $add:["$$score",10]
+                }
+            }
+        }
+    }
+})
+
+db.onlinestudents.aggregate([
+    {
+        $lookup:{
+            from:"enrollments",
+            let:{student_id:""},
+            pipeline:
+            as:"enrolledCourses"
+        }
+    }
+])
