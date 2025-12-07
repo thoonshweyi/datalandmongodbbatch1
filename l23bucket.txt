@@ -1,0 +1,213 @@
+db.backlinestaffs.insertMany([
+    {_id:1,name:"Aung Aung",dept:"IT",salary:400000,city:"Yangon"},
+    {_id:2,name:"Su Su",dept:"HR",salary:300000,city:"Mandalay"},
+    {_id:3,name:"Kyaw Kyaw",dept:"IT",salary:700000,city:"Yangon"},
+    {_id:4,name:"Ni Ni",dept:"Fincnce",salary:200000,city:"Pyinoolwin"},
+    {_id:5,name:"Tun Tun",dept:"IT",salary:500000,city:"Yangon"},
+])
+
+=> $sortByCount shorthand to group, count, sort(dec)
+
+db.backlinestaffs.aggregate([
+    {
+        $sortByCount: "$dept"
+    }
+])
+
+
+db.backlinestaffs.aggregate([
+    {
+        $sortByCount: "$city"
+    }
+])
+
+---------------------------------------------------------------------------------------
+
+=> $bucket
+
+db.collection.aggregate([
+    {
+        $bucket: {
+            groupBy:<expression>,
+            boundaries:[lowerbound1,lowerbound2], // ***** lst to grt
+            output: {}
+        }
+    }
+]);
+
+= exe 1
+db.backlinestaffs.aggregate([
+    {
+        $bucket: {
+            groupBy: "$salary",
+            boundaries:[0,300000,500000,800000], // ***** lst to grt
+            output: {
+                count: {$sum:1},
+                names: {$push: "$name"}
+            }
+        }
+    }
+]);
+
+
+=exe 2
+db.backlinestaffs.aggregate([
+    {
+        $bucket: {
+            groupBy: "$salary",
+            boundaries:[0,300000,500000,800000], // ***** lst to grt
+            output: {
+                count: {$sum:1},
+                names: {$push: "$name"},
+                avgSalary: {$avg:"$salary"},
+                maxSalary: {$max:"$salary"},
+                minSalary: {$min:"$salary"},
+            }
+        }
+    }
+]);
+
+-------------------------------------------------------------------------------
+=>$bucketAuto
+
+=exe 1
+db.backlinestaffs.aggregate([
+    {
+        $bucketAuto: {
+            groupBy: "$salary",
+            buckets:1,
+            output: {
+                count: {$sum:1},
+                names: {$push: "$name"},
+                avgSalary: {$avg:"$salary"},
+                maxSalary: {$max:"$salary"},
+                minSalary: {$min:"$salary"},
+            }
+        }
+    }
+]);
+
+=exe 2
+db.backlinestaffs.aggregate([
+    {
+        $bucketAuto: {
+            groupBy: "$salary",
+            buckets:2,
+            output: {
+                count: {$sum:1},
+                names: {$push: "$name"},
+                avgSalary: {$avg:"$salary"},
+                maxSalary: {$max:"$salary"},
+                minSalary: {$min:"$salary"},
+            }
+        }
+    }
+]);
+
+=exe 3
+db.backlinestaffs.aggregate([
+    {
+        $bucketAuto: {
+            groupBy: "$salary",
+            buckets:3,
+            output: {
+                count: {$sum:1},
+                names: {$push: "$name"},
+                avgSalary: {$avg:"$salary"},
+                maxSalary: {$max:"$salary"},
+                minSalary: {$min:"$salary"},
+            }
+        }
+    }
+]);
+
+=exe 4
+db.backlinestaffs.aggregate([
+    {
+        $bucketAuto: {
+            groupBy: "$salary",
+            buckets:4,
+            output: {
+                count: {$sum:1},
+                names: {$push: "$name"},
+                avgSalary: {$avg:"$salary"},
+                maxSalary: {$max:"$salary"},
+                minSalary: {$min:"$salary"},
+            }
+        }
+    }
+]);
+-------------------------------------------------------------------------------------------------------------
+= $out
+
+= exe 1 ( write salary buckets to a new collection)
+
+show collections;
+
+db.backlinestaffs.aggregate([
+    {
+        $bucket: {
+            groupBy: "$salary",
+            boundaries:[0,300000,500000,800000], // ***** lst to grt
+            output: {
+                count: {$sum:1},
+                names: {$push: "$name"},
+                avgSalary: {$avg:"$salary"},
+                maxSalary: {$max:"$salary"},
+                minSalary: {$min:"$salary"},
+            }
+        }
+    },{
+        $out: "frontlinestaffs"
+    }
+]);
+
+db.frontlinestaffs.find();
+
+frontlinestaffs // output saved as collection
+-------------------------------------------------------------------------------------------------------------
+⭐ What $bucket Does (Main Idea)
+
+$bucket groups documents into ranges based on a numeric field.
+
+Think of it like:
+
+Putting salaries into salary boxes
+
+Each box has a range
+
+Count how many people fall into that range
+
+And optionally calculate statistics (avg, min, max, etc.)
+
+
+1️⃣ groupBy: "$salary"
+
+You tell MongoDB:
+
+“Take the salary value of each staff, and put them into buckets (groups).”
+
+2️⃣ boundaries: [0, 300000, 500000, 800000]
+
+These are the range borders.
+
+It creates buckets like this:
+
+0 ≤ salary < 300000
+
+300000 ≤ salary < 500000
+
+500000 ≤ salary < 800000
+
+⚠ Important:
+
+Left side is inclusive (≥)
+
+Right side is exclusive (<)
+
+Example:
+299,999 → goes into first bucket
+300,000 → goes into second bucket
+499,999 → second bucket
+500,000 → third bucket
+800,000 → ❌ excluded (not < 800000)

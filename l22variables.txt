@@ -94,8 +94,8 @@ db.officestaffs.aggregate([
 =$let
 {
     $let{
-        vars:,
-        in:
+        vars:{variablename:<expression>},
+        in:<expression that use the varialbes>:
     }
 }
 
@@ -137,6 +137,7 @@ db.enrollments.insertMany([
 ])
 
 
+=>without let
 db.onlinestudents.aggregate({
     $project:{
         name:1,
@@ -152,28 +153,146 @@ db.onlinestudents.aggregate({
     }
 })
 
-db.onlinestudents.aggregate({
-    $project:{
-        name:1,
-        adjustScores:{
-            $map:{
-                input:"$scores",
-                as: "score",
-                in: {
-                    $add:["$$score",10]
-                }
-            }
-        }
-    }
-})
 
 db.onlinestudents.aggregate([
     {
         $lookup:{
             from:"enrollments",
-            let:{student_id:""},
-            pipeline:
+            let:{student_id:"$_id"},
+            pipeline:[
+                {
+                    $match:{
+                        $expr:{
+                            $eq: ["$studentId","$$student_id"]
+                        }
+                    }
+                }
+            ],
             as:"enrolledCourses"
         }
     }
 ])
+
+
+-----------------------------------------------------------------------
+✅ What is $let in MongoDB Aggregation?
+
+$let allows you to:
+
+1️⃣ Create temporary variables (vars) inside an expression
+2️⃣ Use those variables inside the in block
+
+It works the same way as let in JavaScript:
+
+let x = 5;
+let result = x * 2;
+
+
+MongoDB version:
+
+$let: {
+    vars: { x: 5 },
+    in: { $multiply: ["$$x", 2] }
+}
+
+
+✅ 1. BASIC $lookup
+
+Used when you want to join two collections using one field = one field (simple equality match).
+
+✔ Purpose
+
+Perform a LEFT JOIN between two collections.
+
+Match using direct equality.
+
+✔ Basic Structure
+{
+  $lookup: {
+    from: "otherCollection",
+    localField: "fieldInThisCollection",
+    foreignField: "fieldInOtherCollection",
+    as: "result"
+  }
+}
+
+✔ Example
+
+Join products with categories:
+
+{
+  $lookup: {
+    from: "categories",
+    localField: "category_id",
+    foreignField: "_id",
+    as: "category_info"
+  }
+}
+
+✔ When to Use
+
+One-to-one or one-to-many simple joins
+
+No complex conditions
+
+No pipeline needed
+
+✅ 2. ADVANCED $lookup (Pipeline Lookup)
+
+Used when the relationship is complex, requires filtering, sorting, comparison, or joining on multiple fields.
+
+✔ Purpose
+
+Perform advanced joins using:
+
+multiple matching conditions
+
+comparisons ($gt, $lt, $in)
+
+additional pipelines
+
+variables (let)
+
+multiple fields join
+
+nested lookups
+
+✔ Advanced Structure
+{
+  $lookup: {
+    from: "otherCollection",
+    let: { localVar: "$localField" },
+    pipeline: [
+      { $match: { $expr: { $eq: ["$foreignField", "$$localVar"] } } },
+      { $sort: { created_at: -1 } },
+      { $limit: 1 }
+    ],
+    as: "result"
+  }
+}
+
+✔ Example: Join with filter + sort + limit
+
+Get only the latest order of each customer:
+
+{
+  $lookup: {
+    from: "orders",
+    let: { customerId: "$_id" },
+    pipeline: [
+      { $match: { $expr: { $eq: ["$customer_id", "$$customerId"] } } },
+      { $sort: { created_at: -1 } },
+      { $limit: 1 }
+    ],
+    as: "latest_order"
+  }
+}
+
+🎯 Main Differences (Very Short)
+Feature	Basic $lookup	Advanced $lookup
+Join type	Simple equality	Complex conditions
+Syntax	localField + foreignField	let + pipeline + $expr
+Match on multiple fields	❌ No	✔ Yes
+Filtering & sorting	❌ No	✔ Yes
+Limit, group, project inside	❌ No	✔ Yes
+Performance control	Low	High (better tuning)

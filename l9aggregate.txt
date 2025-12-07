@@ -155,7 +155,7 @@ db.students.aggregate([
             _id: "$class"
         }
     }
-])
+]);
 *result
 [ { _id: 'B' }, { _id: 'A' }, { _id: 'C' } ]
 
@@ -166,7 +166,7 @@ db.students.aggregate([
             total: {$sum:1}
         }
     }
-])
+]);
 *result
 [
   { _id: 'B', total: 3 },
