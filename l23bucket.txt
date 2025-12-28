@@ -165,7 +165,205 @@ db.backlinestaffs.aggregate([
 db.frontlinestaffs.find();
 
 frontlinestaffs // output saved as collection
+
+
+=exe 2 
+db.backlinestaffs.find()
+db.frontlinestaffs.find();
+
+db.backlinestaffs.insertMany([
+    {_id:6,name:"Bo Bo",dept:"IT",salary:300000,city:"Yangon"},
+    {_id:7,name:"Yamon",dept:"HR",salary:600000,city:"Mandalay"},
+])
+
+db.backlinestaffs.find();
+db.frontlinestaffs.find();
+
+
+db.backlinestaffs.aggregate([
+    {
+        $bucket: {
+            groupBy: "$salary",
+            boundaries:[0,300000,500000,800000], // ***** lst to grt
+            output: {
+                count: {$sum:1},
+                names: {$push: "$name"},
+                avgSalary: {$avg:"$salary"},
+                maxSalary: {$max:"$salary"},
+                minSalary: {$min:"$salary"},
+            }
+        }
+    },{
+        $out: "frontlinestaffs"
+    }
+]);
+
+db.frontlinestaffs.find();
 -------------------------------------------------------------------------------------------------------------
+=> Use MongoDb Views (Read Only, but always current)
+
+show collections
+db.system.views.find()
+
+db.createView("middlelinestaffs_view","backlinestaffs",[
+    {
+        $bucket: {
+            groupBy: "$salary",
+            boundaries:[0,300000,500000,800000], // ***** lst to grt
+            output: {
+                count: {$sum:1},
+                names: {$push: "$name"},
+                avgSalary: {$avg:"$salary"},
+                maxSalary: {$max:"$salary"},
+                minSalary: {$min:"$salary"},
+            }
+        }
+    }
+])
+
+// middlelinestaffs  [view]
+
+
+show collections
+db.system.views.find();
+
+db.middlelinestaffs_view.find();
+
+=> exe 3
+db.backlinestaffs.find()
+
+db.backlinestaffs.insertMany([
+    {_id:8,name:"Nyi Nyi",dept:"IT",salary:250000,city:"Yangon"},
+    {_id:9,name:"Ko Ko",dept:"IT",salary:200000,city:"Mandalay"},
+])
+
+db.backlinestaffs.find()
+
+db.frontlinestaffs.find();
+
+db.middlelinestaffs_view.find();
+
+=> DROP 
+db.middlelinestaffs.drop();
+show collections
+
+
+=> $facet - Multiple Analytics in one query
+
+db.collections.aggregate([
+    {
+        $facet:{
+            <outputField1>:[<pipeline1>],
+            <outputField2>:[<pipeline1>],
+        }
+    }
+]);
+
+=> exe 1
+db.backlinestaffs.aggregate([
+    {
+        $facet:{
+            salaryBucket:[
+                {
+                    $bucketAuto:{
+                        groupBy: "$salary",
+                        buckets: 3,
+                        output: {
+                            count: {$sum:1}
+                        }
+                    }
+                }
+            ],
+            topDepts:[
+                {
+                    $sortByCount: "$dept"
+                }
+            ],
+            citygroup:[
+                {
+                    $sortByCount: "$city"
+                }
+            ],
+            cities: [
+                {$group:{_id:"$city"}},
+                {
+                    $project:{
+                        _id:0,
+                        city: "$_id"
+                    }
+                }
+            ]
+        }
+    }
+])
+
+=>exe 2
+db.backlinestaffs.aggregate([
+    {
+        $facet: {
+            // Pipeline1 : Salary anasysis
+            "salaryAnalysis":[
+                {
+                    $bucket:{
+                        groupBy: "$salary",
+                        boundaries:[0,300000,500000,800000], 
+                        output: {
+                            count: {$sum:1},
+                            avgSalary: {$avg: "$salary"},
+                            employees: {$push: "$name"}
+                        }
+                    }
+                }
+            ],
+            // Pipeline1 : Department Summary
+            "departmentStats": [
+                {
+                    $group:{
+                        _id: "$dept",
+                        totalEmployees: {$sum:1},
+                        avgSalary: {$avg: "$salary"},
+                        minSalary: {$min: "$salary"},
+                        maxSalary: {$max: "$salary"},
+                    }
+                },
+                {$sort: {avgSalary: -1}} // 1 ASC, -1 DSC
+            ],
+            // Pipeline3 : City Distribution
+            "cityDistribution": [
+                {
+                    $group:{
+                        _id:"$city",
+                        count: {$sum:1},
+                        totalSalary: {$sum:"$salary"}
+                    }
+                }
+            ],
+             // Pipeline3 : Highest paid employees
+            "toEarners": [
+                {
+                    $project:{
+                        name:1,
+                        dept:1,
+                        salary:1,
+                        city:1
+                    }
+                },
+                {
+                    $sort: {
+                        salary: -1
+                    }
+                },
+                {
+                    $limit: 2
+                }
+            ],
+        }
+    }
+])
+
+
+-------------------------------------------------------------------------------------------------------------
+
 ⭐ What $bucket Does (Main Idea)
 
 $bucket groups documents into ranges based on a numeric field.
@@ -211,3 +409,189 @@ Example:
 499,999 → second bucket
 500,000 → third bucket
 800,000 → ❌ excluded (not < 800000)
+--------------------------------------------------------------------------------------------------
+1️⃣ What problem does $facet solve? (Very simple)
+
+Imagine you have ONE list of data and you want MULTIPLE results from it.
+
+Example:
+From the same orders table, you want:
+
+total orders
+
+total sales amount
+
+paid orders list
+
+Normally → 3 queries
+With $facet → 1 query
+
+👉 $facet = split one data flow into many result paths
+
+
+Question:
+
+From this SAME data, I want:
+
+How many users total?
+
+How many users are age 20?
+
+$facet pipeline
+db.users.aggregate([
+  {
+    $facet: {
+      totalUsers: [
+        { $count: "count" }
+      ],
+      age20Users: [
+        { $match: { age: 20 } },
+        { $count: "count" }
+      ]
+    }
+  }
+])
+
+Result (IMPORTANT)
+{
+  totalUsers: [ { count: 3 } ],
+  age20Users: [ { count: 2 } ]
+}
+
+
+🔴 Notice:
+
+Same input data
+
+Two different results
+
+Returned together
+
+5️⃣ Why not do this without $facet?
+
+Without $facet you must:
+
+Query 1 → total users
+Query 2 → age 20 users
+
+
+With $facet:
+
+Query 1 → everything
+
+6️⃣ Very important rule (THIS causes confusion)
+$facet does NOT filter data by itself
+
+It only:
+
+Splits the data
+
+Each split must have its own $match, $group, $count, etc
+
+7️⃣ Visual diagram (clear mental model)
+Input documents
+   │
+   ▼
+ $facet
+   ├── totalUsers pipeline
+   │       └── count
+   │
+   └── age20Users pipeline
+           └── match age=20 → count
+---------------------------------------------------------------------------------
+=>Unique City
+4️⃣ Why do we need $project after $group?
+
+Because:
+
+$group always puts the grouped value into _id
+
+We usually don’t want _id in the final output
+
+We want a clean field name
+
+So:
+
+$group → makes data unique
+
+$project → cleans and renames output
+
+5️⃣ Equivalent SQL (to make it crystal clear)
+SELECT DISTINCT city FROM users;
+
+
+MongoDB way:
+
+$group → DISTINCT
+$project → rename output
+
+
+----------------------------------------------------------------------------------------------------------
+🧠 What is a Pipeline? (Very basic)
+A pipeline is a sequence of steps.
+
+Each step:
+
+Takes data in
+
+Does one job
+
+Passes data to the next step
+
+Data → Step → Step → Step → Final Result
+
+
+In MongoDB:
+
+Each step = pipeline stage
+
+All steps together = aggregation pipeline
+
+🧩 What is a pipeline stage?
+
+A pipeline stage is ONE STEP that changes or processes data.
+
+Examples of stages:
+
+$match → filter
+
+$group → group
+
+$project → select / rename fields
+
+$sort → sort
+
+$limit → limit results
+
+
+📌 MongoDB pipeline in real code
+db.users.aggregate([
+  { $match: { city: "Yangon" } },
+  { $group: { _id: "$city" } },
+  { $project: { _id: 0, city: "$_id" } }
+])
+
+Read this in plain English 👇
+
+1️⃣ $match
+➡ “Keep only users from Yangon”
+
+2️⃣ $group
+➡ “Group them by city (remove duplicates)”
+
+3️⃣ $project
+➡ “Rename fields and clean output”
+
+🔑 Important structure (THIS IS KEY)
+aggregate([
+  stage1,
+  stage2,
+  stage3
+])
+
+
+aggregate() → runs pipeline
+
+[ ] → list of stages
+
+{ } → one stage

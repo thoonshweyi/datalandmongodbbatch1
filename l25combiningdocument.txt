@@ -1,0 +1,79 @@
+db.retailsales.insertMany([
+    {
+        _id:1,
+        name: "Laptop",
+        details: {brand: "Dell",specs: {ram:16,storage:512}},
+        prices:[1200,1250,1199,1300],
+        category: "Electronics",
+        inventory: {warehouse: "A",stock:50}
+    },
+    {
+        _id:2,
+        name: "Mouse",
+        details: {brand: "Logitech", wireless: true},
+        prices:[20,30,50],
+        category: "Accessories",
+        inventory: {warehouse: "B",stock:200}
+    },
+    {
+        _id:3,
+        name: "Keyboard",
+        details: {brand: "A4Tech", mechanical: true},
+        prices:[80,90,100,150],
+        category: "Accessories",
+    },
+]);
+
+
+=>$mergeObjects (comining document)
+
+=exe 1
+db.retailsales.aggregate([
+    {
+        $project:{
+            mergedDoc:{
+                $mergeObjects: [
+                    {
+                        name: "$name",
+                        category: "$category"
+                    },
+                    "$details",
+                    "$inventory"
+                ]
+            }
+        }
+    }
+])
+
+=exe 2
+db.retailsales.aggregate([
+    {
+        $project:{
+            fullProduct:{
+                $mergeObjects: [
+                    {
+                        productId: "$_id",
+                        productName: "$name",
+                        productdCategory: "$category"
+                    },
+                    "$details",
+                    {
+                        priceStats:{
+                            avgPrice: {$avg: "$prices"},
+                            minPrice: {$min: "$prices"},
+                            maxPrice: {$max: "$prices"},
+                        }
+                    },
+                    {
+                        $cond: {
+                            if: {$gt: [{$ifNull: ["$inventory.stock",0]},100]},
+                            then: {avability: "In Stock"},
+                            else: {avability: "Limited"}
+                        }
+                    }
+                ]
+            }
+        }
+    }
+])
+-------------------------------------------------------------------------------
