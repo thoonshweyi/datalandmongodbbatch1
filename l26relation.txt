@@ -1,0 +1,290 @@
+=> Relationship
+
+(i) Embedded Documents
+(ii) Document References
+--------------------------------------
+=> (i) Embedded Documents
+
+show dbs;
+
+use userProfileDB
+
+db.users.insertMany([
+    {
+        _id:1,
+        name:"Ko Ko",
+        email: "koko@gmail.com",
+        address: {
+            street: "No.123 Hinsi St",
+            city: "Mandalay",
+            zipcode: "10001",
+            country: "Myanmar"
+        }
+    },
+    {
+        _id:2,
+        name:"Bo Bo",
+        email: "bobo@gmail.com",
+        address: {
+            street: "No.456 Sapal St",
+            city: "Yangon",
+            zipcode: "20001",
+            country: "Myanmar"
+        }
+    }
+])
+
+db.users.find({})
+
+// find user from Mandalay
+db.users.find({"address.city":"Mandalay"})
+
+// find user with specific zipcode
+db.users.find({"address.zipcode":"20001"})
+
+// update ko ko's city
+db.users.updateOne(
+    {_id:1},
+    {$set:{"address.city":"Bago"}}
+)
+
+db.users.find()
+
+---------------------------------------------------------------------
+
+(ii) Document References (1:many)
+
+use blogDB
+
+db.users.insertMany([
+    {_id:"user1",name:"Su Su",email:"susu@gmail.com"},
+    {_id:"user2",name:"Nu Nu",email:"nunu@gmail.com"},
+]);
+
+db.posts.insertMany([
+    {
+        _id:1,
+        title: "First Post",
+        content: "This is my first blog post.",
+        userId: "user1",
+        tag: ["mongodb","database"],
+        createdAt: new Date()
+    },
+    {
+        _id:2,
+        title: "Learning MongoDB",
+        content: "MongoDB relatioship are powerful.",
+        userId: "user1",
+        tag: ["mongodb","tutorial"],
+        createdAt: new Date()
+    },
+    {
+        _id:3,
+        title: "JavaScript Tips",
+        content: "Some useful JavaScript tips.",
+        userId: "user2",
+        tag: ["javascript","webdev"],
+        createdAt: new Date()
+    },
+])
+
+db.users.find();
+db.posts.find();
+
+//= exe1 Joins posts with users
+
+db.posts.aggregate([
+    {
+        $lookup:{
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "author"
+        }
+    },
+    {
+        $project: {
+            title:1,
+            content:1,
+            "author.name":1,
+            "author.email":1
+        }
+    }
+])
+
+//= exe2 Joins posts with users
+
+db.posts.aggregate([
+    {
+        $lookup:{
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "author" // output array field
+        }
+    },
+    {
+        $unwind: "$author" // convert array to object
+    },
+    {
+        $project: {
+            title:1,
+            content:1,
+            "author.name":1,
+            "author.email":1
+        }
+    }
+])
+
+(ii) Document References (many:many)
+
+use bookstoreDB
+
+db.books.insertMany([
+    {_id:1,title:"MongoDB Basics",price:20},
+    {_id:2,title:"Advanced MongoDB",price:30},
+    {_id:3,title:"JavaScript Guide",price:40},
+]);
+
+db.authors.insertMany([
+    {_id:1,name:"Daw Nilar",country: "Myanmar"},
+    {_id:2,name:"Khon Chai",country:"Thailand"},
+]);
+
+
+db.book_author.insertMany([
+    {bookkID:1,authorID:1}, // Daw Nilar = MongoDB Basics
+    {bookkID:2,authorID:1}, // Daw Nilar = Advanced MongoDB
+    {bookkID:3,authorID:2}, // Khon Chai = JavaScript Guide
+    {bookkID:2,authorID:2}, // Khon Chai = Advanced MongoDB
+])
+
+show collections;
+
+// exe 1 find all book by Daw Nilar
+
+db.book_author.aggregate([
+    {$match: {authorID:1}},
+    {
+        $lookup:{
+            from: "books",
+            localField: "bookkID",
+            foreignField: "_id",
+            as: "bookDetails"  // output array field
+        },
+    },
+    {$unwind:"$bookDetails"},
+    {
+        $lookup:{
+            from: "authors",
+            localField: "authorID",
+            foreignField: "_id",
+            as: "authorDetails" // output array field
+        },
+    },
+    {$unwind:"$authorDetails"},
+    {
+        $project:{
+            bookTitle: "$bookDetails.title",
+            authorName: "$authorDetails.name",
+            price: "$bookDetails.price"
+        }
+    }
+])
+
+
+// exe 2 find all book by Khon Chai
+
+db.book_author.aggregate([
+    {$match: {authorID:2}},
+    {
+        $lookup:{
+            from: "books",
+            localField: "bookkID",
+            foreignField: "_id",
+            as: "bookDetails"  // output array field
+        },
+    },
+    {$unwind:"$bookDetails"},
+    {
+        $lookup:{
+            from: "authors",
+            localField: "authorID",
+            foreignField: "_id",
+            as: "authorDetails" // output array field
+        },
+    },
+    {$unwind:"$authorDetails"},
+    {
+        $project:{
+            bookTitle: "$bookDetails.title",
+            authorName: "$authorDetails.name",
+            price: "$bookDetails.price"
+        }
+    }
+]);
+
+-variable name "$bookDetails.price"
+-left hand side by column name get Object
+-right hand side by varialbe name get only properties
+
+// = exe 3
+
+db.book_author.aggregate([
+    {
+        $lookup:{
+            from : "books",
+            localField: "bookkID",
+            foreignField: "_id",
+            as: "book"
+        }
+    },
+    {$unwind: "$book"},
+    {$match:{"book.title":"Advanced MongoDB"}},
+     {
+        $lookup:{
+            from : "authors",
+            localField: "authorID",
+            foreignField: "_id",
+            as: "author"
+        }
+    },
+    {$unwind: "$author"},
+    {
+        $project:{
+            bookTitle: "$book.title",
+            authorName: "$author.name",
+            authorCountry: "$author.country",
+        }
+    }
+]);
+
+
+db.book_author.aggregate([
+    {
+        $lookup:{
+            from : "books",
+            localField: "bookkID",
+            foreignField: "_id",
+            as: "book"
+        }
+    },
+    {$unwind: "$book"},
+    {$match:{"book.title":"Advanced MongoDB"}},
+     {
+        $lookup:{
+            from : "authors",
+            localField: "authorID",
+            foreignField: "_id",
+            as: "author"
+        }
+    },
+    {$unwind: "$author"},
+    {
+        $project:{
+            "book.title":1,
+            "author.name":1,
+            "author.country":1,
+        }
+    }
+]);
