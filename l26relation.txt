@@ -1,7 +1,8 @@
 => Relationship
 
 (i) Embedded Documents
-(ii) Document References
+(ii) Document References  (many:many)
+(iii) Many-to-Many with Array References (many:many)
 --------------------------------------
 => (i) Embedded Documents
 
@@ -91,7 +92,7 @@ db.posts.insertMany([
 db.users.find();
 db.posts.find();
 
-//= exe1 Joins posts with users
+//= exe 1(i) Joins posts with users 
 
 db.posts.aggregate([
     {
@@ -112,7 +113,8 @@ db.posts.aggregate([
     }
 ])
 
-//= exe2 Joins posts with users
+
+//= exe 1(ii) Joins posts with users
 
 db.posts.aggregate([
     {
@@ -120,11 +122,44 @@ db.posts.aggregate([
             from: "users",
             localField: "userId",
             foreignField: "_id",
-            as: "author" // output array field
+            as: "author"
         }
     },
     {
-        $unwind: "$author" // convert array to object
+        $unwind: "$author"
+    },
+    {
+        $project: {
+            _id:1,
+            title:1,
+            tag:1,
+            createdAt:1,
+            "author.name":1,
+            "author.email":1
+        }
+    }
+])
+
+=> Joins posts with users (using $match)
+//= exe 2(i) 
+
+// Add index
+db.posts.createIndex({userId:1})
+db.posts.createIndex({tags:1}) // if filter using tags
+db.posts.createIndex({createdAt:1}) // if filter using createdAt
+
+
+db.posts.getIndexes()
+
+db.posts.aggregate([
+    {$match: {userId: "user1"}},
+    {
+        $lookup:{
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "author"
+        }
     },
     {
         $project: {
@@ -135,6 +170,99 @@ db.posts.aggregate([
         }
     }
 ])
+
+// = exe 2 (ii)
+db.posts.aggregate([
+    {$match: {userId: "user2"}},
+    {
+        $lookup:{
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "author"
+        }
+    },
+    {
+        $project: {
+            title:1,
+            content:1,
+            "author.name":1,
+            "author.email":1
+        }
+    }
+])
+
+
+=> Lookup with pipline, $match
+// = exe 3 (i)
+db.posts.aggregate([
+    {
+        $lookup:{
+            from: "users",
+            let: {authId: "$userId"},
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {$eq: ["$_id","$$authId"]}
+                    }
+                }
+            ],
+            as: "author"
+        }
+    },
+])
+
+
+// = exe 3 (ii)
+db.posts.aggregate([
+    {
+        $lookup:{
+            from: "users",
+            let: {authId: "$userId"},
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {$eq: ["$_id","$$authId"]}
+                    }
+                }
+            ],
+            as: "author"
+        }
+    },
+    {$unwind: "$author"}
+])
+
+=> find "Su Su" posts! using users collection
+// = exe 4
+db.posts.aggregate([
+    {
+        $lookup:{
+            from: "users",
+            let: {uid: "$userId"},
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {$eq: ["$_id","$$uid"]}
+                    }
+                },
+                {
+                    $match: {name: "Su Su"} // Nu Nu
+                }
+            ],
+            as: "author"
+        }
+    },
+    {$unwind: "$author"},
+    {
+        $project: {
+            title: 1,
+            content: 1,
+            "author.name": 1,
+            "author.email":1
+        }
+    }
+]);
+
 
 (ii) Document References (many:many)
 
@@ -288,3 +416,106 @@ db.book_author.aggregate([
         }
     }
 ]);
+
+---------------------------------------------------------------------
+
+(iii) Many-to-Many with Array References (many:many)
+
+use courseDB
+
+db.courses.insertMany([
+    {
+        _id: "C1",
+        name: "Laravel12",
+        instructor: "Mr.Tin",
+        studentIds:["Student1","Student2","Student3"]
+    },
+    {
+        _id: "C2",
+        name: "Nodejs25",
+        instructor: "Prof.July",
+        studentIds:["Student1","Student3"]
+    },
+    {
+        _id: "C3",
+        name: "Python3",
+        instructor: "Dr.June",
+        studentIds:["Student2","Student4"]
+    },
+])
+
+db.students.insertMany([
+    {
+        _id: "Student1",
+        name:"Tun Tun",
+        email: "tuntun@gmail.com",
+        courseIds: ["C1","C2"]
+    },
+    {
+        _id: "Student2",
+        name:"Zaw Zaw",
+        email: "zawzaw@gmail.com",
+        courseIds: ["C1","C3"]
+    },
+    {
+        _id: "Student3",
+        name:"Aung Aung",
+        email: "aungaung@gmail.com",
+        courseIds: ["C1","C2"]
+    },
+    {
+        _id: "Student4",
+        name:"Kyaw Kyaw",
+        email: "kyawkyaw@gmail.com",
+        courseIds: ["C3"]
+    }
+])
+
+show collections
+db.stats()
+db.students.countDocuments()
+db.courses.countDocuments()
+
+= exe 1
+db.students.aggregate([
+    {
+        $lookup:{
+            from: "courses",
+            localField: "courseIds",
+            foreignField: "_id",
+            as: "enrolledCourses"
+        }
+    },
+    {
+        $project: {
+            name: 1,
+            email: 1,
+            "enrolledCourses.name": 1,
+            "enrolledCourses.instructor": 1
+        }
+    }
+])
+
+= exe 2 (Reverse lookup: find courses with student details)
+db.courses.aggregate([
+    {
+        $lookup:{
+            from: "students",
+            localField: "studentIds",
+            foreignField: "_id",
+            as: "studentsEnrolled"
+        }
+    },
+    {
+        $project: {
+            name: 1,
+            instructor: 1,
+            "studentsEnrolled.name": 1,
+            "studentsEnrolled.email": 1,
+            totalStucents:{
+                $size: "$studentsEnrolled"
+            }
+        }
+    }
+])
+------------------------------------------------------------------------
