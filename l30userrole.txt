@@ -1,0 +1,191 @@
+=> Role
+
+=> Create Application User (read access / write access)
+
+mongosh -u rootadmin -p --authenticationDatabase admin
+mongodbcloud123
+
+use proone
+
+db.createUser({
+    user: "appuser",
+    pwd: "mongodbcloud123",
+    roles: [
+        {role: "readWrite", db: "proone"}
+    ]
+})
+
+exit 
+
+=Test
+mongosh -u appuser -p --authenticationDatabase proone
+mongodbcloud123
+exit
+----------------------------
+=Test
+mongosh -u rootadmin -p --authenticationDatabase admin
+mongodbcloud123
+
+use proone
+show collections
+db.sales.insertOne({test:1})
+db.sales.find({})
+exit
+
+mongosh -u appuser -p --authenticationDatabase proone
+mongodbcloud123
+
+show databases                          // allowed
+use proone                              // allowed
+show collections                        // allowed
+db.sales.find({})                       // allowed
+db.sales.insertOne({test:2})            // allowed
+db.sales.find({})                       // allowed
+exit                                    
+
+-----------------------------
+=> Create Reporting User (read access)
+
+mongosh -u rootadmin -p --authenticationDatabase admin
+mongodbcloud123
+
+use proone
+
+db.createUser({
+    user: "reportuser",
+    pwd: "123456789",
+    roles: [
+        {role: "read", db: "proone"}
+    ]
+})
+
+exit
+
+=Test
+mongosh -u reportuser -p --authenticationDatabase proone
+123456789
+exit 
+
+
+=Test
+
+mongosh -u reportuser -p --authenticationDatabase proone
+123456789
+
+show databases                          // allowed
+use proone                              // allowed
+show collections                        // allowed
+db.sales.find({})                       // allowed
+db.sales.insertOne({test:3})            // denied
+db.sales.find({})                       // allowed
+exit                                    
+-----------------------------------------------------------------------------
+
+=> Check existing users in current database
+
+mongosh -u appuser -p --authenticationDatabase proone
+mongodbcloud123
+
+exit
+
+mongosh -u reportuser -p --authenticationDatabase proone
+123456789
+
+exit
+
+mongosh -u rootadmin -p --authenticationDatabase admin
+mongodbcloud123
+
+
+= Method 1
+use proone;
+db.getUsers();
+
+= Method 2
+use admin;
+db.system.users.find({db: "proone"})
+
+-------------------------------------------------------------------------
+
+=> Change Password
+
+mongosh -u rootadmin -p --authenticationDatabase admin
+mongodbcloud123
+
+use proone
+
+db.updateUser("reportuser",{
+    pwd: "987654321",
+    roles: [
+        {role: "read", db: "proone"}
+    ]
+})
+
+db.updateUser("reportuser",{
+    pwd: "987654321",
+    roles: [
+        {role: "readWrite", db: "proone"}
+    ]
+})
+
+
+exit 
+
+=Test
+mongosh -u reportuser -p --authenticationDatabase proone
+987654321
+exit
+-------------------------------------------------------------------------
+=> Update Role
+
+mongosh -u rootadmin -p --authenticationDatabase admin
+mongodbcloud123
+
+use proone
+
+db.createUser({
+    user: "reportuser",
+    pwd: "123456789",
+    roles: [
+        {role: "read", db: "proone"}
+    ]
+})
+
+db.updateUser("reportuser",{
+    pwd: "987654321",
+    roles: [
+        {role: "readWrite", db: "proone"}
+    ]
+})
+
+
+db.grantRolesToUser("reportuser",[
+    {role: "readWrite", db: "proone"}
+]);
+
+use proone
+db.getUsers();
+
+exit 
+
+=Test
+mongosh -u reportuser -p --authenticationDatabase proone
+987654321
+
+exit
+
+-------------------------------------------------------------------------
+=> Drop User
+
+mongosh -u rootadmin -p --authenticationDatabase admin
+mongodbcloud123
+
+use proone
+
+db.dropUser("reportuser")
+
+exit 
+
+=Test
+mongosh -u reportuser -p --authenticationDatabase proone
+987654321

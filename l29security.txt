@@ -1,0 +1,232 @@
+sudo systemctl restart mongod
+mongod
+show databases
+
+show collections
+
+=> Authentication & Roles
+
+=> Create Admin user (no auth yet)
+mongosh
+
+use admin
+
+db.createUser({
+    user: "rootadmin",
+    pwd: "mongodbcloud123",
+    roles: [{role:"root", db:"admin"}]
+});
+
+exit
+
+use dbvalidation
+------------------------------------------------
+
+=> Enable Authentication (Important)
+
+= Linux (edit and cofig)
+    sudo nano /etc/mongod.conf
+
+= Mac 
+    nano /opt/homebrew/etc/mongod.conf
+
+= Windows
+    C:\Program Files\MongoDB\Server\8.2\bin\mongod.cfg
+
+    C:\Program Files\MongoDB\Server\8.0\bin\mogod.cfg
+
+    = Uncommand / Add (remark: text indetation)
+    security
+        authorization: enabled
+
+=Restart MogoDB
+
+    linux                               Mac                                         Window
+    sudo systemctl restart mongod       brew services restart mongodb-community     net stop MongoDB        net start MongoDB
+    sudo systemctl status mongod        brew services status mongodb-community      services.msc
+-----------------------------------------
+=> Connect with Authentication
+
+mongosh
+show databases // denyed
+exit
+
+mysql -u root -p 
+mongosh -u rootadmin -p --authenticationDatabase admin
+mongodbcloud123
+
+show databases // allowed
+use dbvalidation // allowed
+show collections // allowed
+exit
+
+mongosh -u rootadmin -p
+mongodbcloud123
+
+
+show databases // allowed
+use dbvalidation // allowed
+show collections // allowed
+exit
+----------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------
+use admin
+
+MongoDB stores users inside a specific database.
+admin is the special system database used for:
+administrators
+cluster-wide roles
+authentication management
+server-level operations
+
+So this command:
+
+use admin
+
+means:
+
+“Switch to the admin database.”
+
+After this, any user you create will belong to the admin database unless you switch again.
+
+Your code:
+
+db.createUser({
+    user: "rootadmin",
+    pwd: "mongodbcloud123",
+    roles: [{role:"root", db:"admin"}]
+});
+
+creates a MongoDB user.
+
+How createUser() works
+
+db.createUser() creates a new authentication account inside the current database.
+
+Structure:
+
+db.createUser({
+   user: "...",
+   pwd: "...",
+   roles: [...]
+})
+Explanation of each field
+1. user
+user: "rootadmin"
+
+This is the login username.
+
+You will log in using:
+
+mongosh -u rootadmin -p mongodbcloud123 --authenticationDatabase admin
+2. pwd
+pwd: "mongodbcloud123"
+
+This is the password for the account.
+
+MongoDB stores it securely (hashed internally).
+
+3. roles
+roles: [{role:"root", db:"admin"}]
+
+Roles define permissions.
+
+Here:
+
+role: "root"
+→ gives full administrative access
+db: "admin"
+→ the root role is defined in the admin database
+What is the root role?
+
+root is the highest built-in MongoDB role.
+
+It can:
+
+create/drop databases
+create/delete users
+read/write all databases
+manage indexes
+shutdown server
+manage replica sets/sharding
+run administrative commands
+
+Basically:
+
+Super admin of the MongoDB server.
+
+Why create user in admin database?
+
+Admin users are usually stored in admin because:
+
+it is the central authentication database
+cluster-wide roles live there
+easier server management
+
+If you create users in another DB:
+
+use shop
+db.createUser(...)
+
+then that user belongs only to shop database authentication context.
+
+Authentication example
+
+Because the user is stored in admin, login must specify:
+
+--authenticationDatabase admin
+
+Example:
+
+mongosh -u rootadmin -p mongodbcloud123 --authenticationDatabase admin
+
+MongoDB checks credentials inside the admin database.
+
+Flow of your commands
+Step 1
+use admin
+
+Switch to admin database.
+
+Step 2
+db.createUser({...})
+
+Create administrator user in admin DB.
+
+Internally MongoDB stores something like
+admin.system.users
+
+with:
+
+username
+hashed password
+roles
+Result
+
+You now have:
+
+Property	Value
+Username	rootadmin
+Password	mongodbcloud123
+Authentication DB	admin
+Permission	Full server access (root)
