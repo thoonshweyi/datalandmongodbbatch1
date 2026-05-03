@@ -38,6 +38,8 @@ use dbvalidation
     = Uncommand / Add (remark: text indetation)
     security
         authorization: enabled
+    
+    *window user try in cmd
 
 =Restart MogoDB
 

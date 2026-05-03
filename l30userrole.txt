@@ -136,7 +136,7 @@ mongosh -u reportuser -p --authenticationDatabase proone
 987654321
 exit
 -------------------------------------------------------------------------
-=> Update Role
+=> Update Role (solution 1 by grantRolesToUser)
 
 mongosh -u rootadmin -p --authenticationDatabase admin
 mongodbcloud123
@@ -162,6 +162,7 @@ db.updateUser("reportuser",{
 db.grantRolesToUser("reportuser",[
     {role: "readWrite", db: "proone"}
 ]);
+// add role
 
 use proone
 db.getUsers();
@@ -171,6 +172,54 @@ exit
 =Test
 mongosh -u reportuser -p --authenticationDatabase proone
 987654321
+
+
+show databases                          // allowed
+use proone                              // allowed
+show collections                        // allowed
+db.sales.find({})                       // allowed
+db.sales.insertOne({test:3})            // allowed
+db.sales.find({})                       // allowed
+exit  
+
+
+exit
+-------------------------------------------------------------------------
+=> Update Role ( solution 2 by revokeRolesFromUser)
+
+mongosh -u rootadmin -p --authenticationDatabase admin
+mongodbcloud123
+
+use proone
+
+db.grantRolesToUser("reportuser",[
+    {role: "readWrite", db: "proone"}
+]);
+// add role
+
+use proone
+db.getUsers();
+
+db.revokeRolesFromUser("reportuser",[
+    {role: "readWrite", db: "proone"}
+]);
+
+db.getUsers();
+exit 
+
+=Test
+mongosh -u reportuser -p --authenticationDatabase proone
+123456789
+
+
+show databases                          // allowed
+use proone                              // allowed
+show collections                        // allowed
+db.sales.find({})                       // allowed
+db.sales.insertOne({test:4})            // denied
+db.sales.find({})                       // allowed
+exit  
+
 
 exit
 

@@ -344,6 +344,69 @@ https://www.mongodb.com/
 
 
 
+-----------------------------------------------------
+=> MongoDB Atlas
+
+	DATABASE > Clusters > Connect > Compass 
+	mongodb+srv://superuser:<db_password>@cluster0.5yebdvl.mongodb.net/
+
+	SECURITY > Security Quickstart
+	Username = user4
+	Password = p@ssw0rd
+
+	= Allow Your IP Address
+	SECURITY > Database & Network Access > IP Address List > Add IP Address
+	Add Current IP Address (or) Allow Access From Anywhere (0.0.0.0/0) (easy for learning)
+	click Confirm button
+
+	=> MongoDB Compass (your local computer app)
+		open MongoDB Compass
+
+		Add new connection
+		mongodb+srv://user4:p@ssw0rd@cluster0.5yebdvl.mongodb.net/
+		Save & Connect
+
+---------------------------------------------------------
+=> MongoDb Atlas (by shell)
+	DATABASE > Clusters > Connect > Shell 
+	mongosh "mongodb+srv://cluster0.5yebdvl.mongodb.net/" --apiVersion 1 --username <db_username>
+
+	= Open Local Terminal 
+		ctl + alt + t
+		mongosh --version (v 2.6.0)
+
+		= method 1		
+		mongosh "mongodb+srv://cluster0.5yebdvl.mongodb.net/" --apiVersion 1 --username user4
+
+		= method 2
+		mongosh "mongodb+srv://user4:p@ssw0rd@cluster0.5yebdvl.mongodb.net"
+
+		show databases 	or 	show dbs
+
+		use nodejsbatch2
+
+		show collections
+
+		db.getCollectionInfos()
+
+		db.posts.find({})
+
+		exit
+
+----------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 🔧 A software component that allows the operating system or an app to communicate with hardware.
